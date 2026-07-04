@@ -39,11 +39,11 @@ export const Manual: Story = {
     render: () => (
         <div className='py-8'>
             <MessageThread>
-                <HeadingMessage level={1}>Shipping the blog</HeadingMessage>
+                <HeadingMessage>Shipping the blog</HeadingMessage>
                 <TextMessage>
                     Rewrote heyscott on the modern stack this week.
                 </TextMessage>
-                <HeadingMessage level={2}>What changed</HeadingMessage>
+                <HeadingMessage>What changed</HeadingMessage>
                 <TextMessage>• Next 16 + React 19</TextMessage>
                 <TextMessage grouped>• Tailwind v4 theme tokens</TextMessage>
                 <TextMessage grouped>• A Prismic-backed blog</TextMessage>

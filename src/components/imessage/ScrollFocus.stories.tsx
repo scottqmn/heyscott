@@ -44,7 +44,7 @@ export const Demo: Story = {
     render: () => (
         <div className='py-[45vh]'>
             <MessageThread>
-                <HeadingMessage level={2}>Scroll focus demo</HeadingMessage>
+                <HeadingMessage>Scroll focus demo</HeadingMessage>
                 {LINES.map((line, i) => (
                     <TextMessage key={line} grouped={i > 0}>
                         {line}

@@ -22,35 +22,24 @@ import { TextMessage } from './TextMessage';
  * case.
  */
 export const messageSerializers: JSXMapSerializer = {
+    // Every heading level renders as the same incoming body-style bubble.
     heading1: ({ children, key }) => (
-        <HeadingMessage key={key} level={1}>
-            {children}
-        </HeadingMessage>
+        <HeadingMessage key={key}>{children}</HeadingMessage>
     ),
     heading2: ({ children, key }) => (
-        <HeadingMessage key={key} level={2}>
-            {children}
-        </HeadingMessage>
+        <HeadingMessage key={key}>{children}</HeadingMessage>
     ),
     heading3: ({ children, key }) => (
-        <HeadingMessage key={key} level={3}>
-            {children}
-        </HeadingMessage>
+        <HeadingMessage key={key}>{children}</HeadingMessage>
     ),
     heading4: ({ children, key }) => (
-        <HeadingMessage key={key} level={4}>
-            {children}
-        </HeadingMessage>
+        <HeadingMessage key={key}>{children}</HeadingMessage>
     ),
     heading5: ({ children, key }) => (
-        <HeadingMessage key={key} level={5}>
-            {children}
-        </HeadingMessage>
+        <HeadingMessage key={key}>{children}</HeadingMessage>
     ),
     heading6: ({ children, key }) => (
-        <HeadingMessage key={key} level={6}>
-            {children}
-        </HeadingMessage>
+        <HeadingMessage key={key}>{children}</HeadingMessage>
     ),
     paragraph: ({ children, key }) => (
         <TextMessage key={key}>{children}</TextMessage>

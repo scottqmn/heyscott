@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { HeadingMessage } from './HeadingMessage';
+import { TextMessage } from './TextMessage';
 
 /**
  * Headings render as INCOMING bubbles (grey, left-aligned) — the section
- * titles arriving from the other side of the conversation.
+ * titles arriving from the other side of the conversation. They use the same
+ * body text style as {@link TextMessage}; only the incoming treatment differs.
  */
 const meta = {
     title: 'iMessage/HeadingMessage',
@@ -16,31 +18,24 @@ const meta = {
             </div>
         ),
     ],
-    args: { children: 'A heading arrives', level: 1, focusOnScroll: false },
-    argTypes: {
-        level: { control: { type: 'select' }, options: [1, 2, 3, 4, 5, 6] },
-    },
+    args: { children: 'A heading arrives', focusOnScroll: false },
 } satisfies Meta<typeof HeadingMessage>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Level1: Story = { args: { level: 1, children: 'A heading arrives' } };
-export const Level2: Story = {
-    args: { level: 2, children: 'A subsection heading' },
-};
-export const Level3: Story = {
-    args: { level: 3, children: 'A smaller heading' },
-};
+export const Default: Story = {};
 
-export const AllLevels: Story = {
+/** Heading (incoming) and body (outgoing) share one text style. */
+export const NextToBody: Story = {
     render: () => (
         <div className='mx-auto max-w-xl'>
-            {([1, 2, 3, 4, 5, 6] as const).map((level) => (
-                <HeadingMessage key={level} level={level} focusOnScroll={false}>
-                    {`Heading level ${level}`}
-                </HeadingMessage>
-            ))}
+            <HeadingMessage focusOnScroll={false}>
+                A heading arrives
+            </HeadingMessage>
+            <TextMessage focusOnScroll={false}>
+                And the body reply — same font size and weight.
+            </TextMessage>
         </div>
     ),
 };
