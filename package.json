@@ -3,13 +3,23 @@
     "version": "0.1.0",
     "private": true,
     "packageManager": "pnpm@10.33.0",
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "@parcel/watcher",
+            "esbuild",
+            "sharp",
+            "unrs-resolver"
+        ]
+    },
     "scripts": {
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
         "lint": "eslint .",
         "slicemachine": "start-slicemachine",
-        "prismic:types": "prismic-ts-codegen"
+        "prismic:types": "prismic-ts-codegen",
+        "storybook": "storybook dev -p 6006",
+        "build-storybook": "storybook build"
     },
     "dependencies": {
         "@prismicio/client": "^7.21.8",
@@ -26,6 +36,7 @@
     },
     "devDependencies": {
         "@slicemachine/adapter-next": "^0.3.96",
+        "@storybook/nextjs-vite": "^10.4.0",
         "@tailwindcss/postcss": "^4.2.2",
         "@tailwindcss/typography": "^0.5.19",
         "@types/node": "^22.10.0",
@@ -40,6 +51,7 @@
         "prettier-plugin-tailwindcss": "^0.6.5",
         "prismic-ts-codegen": "^0.1.27",
         "slice-machine-ui": "^2.21.3",
+        "storybook": "^10.4.0",
         "tailwindcss": "^4.2.2",
         "typescript": "^5"
     }

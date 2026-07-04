@@ -37,3 +37,6 @@ next-env.d.ts
 
 # slice machine
 .slicemachine/
+
+# storybook
+/storybook-static

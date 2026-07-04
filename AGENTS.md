@@ -25,6 +25,8 @@ bubbles in iMessage blue (`--color-imessage-sent` `#075b97`) / grey
 - `pnpm dev` / `pnpm build` / `pnpm start`
 - `pnpm lint` → `eslint .` (flat config `eslint.config.mjs`).
   NOTE: `next lint` was removed in Next 16 — do not reintroduce it.
+- `pnpm storybook` → Storybook dev server on **port 6006**
+  (`storybook dev -p 6006`). `pnpm build-storybook` → static build.
 - `pnpm prismic:types` → regenerate `prismicio-types.d.ts` from local models
   (offline; reads `customtypes/**` + `src/slices/**/model.json`). Run after
   changing any custom type or slice model. The generated file is committed.
@@ -75,6 +77,23 @@ to focused during SSR / before the observer attaches, so there's no dim flash.
 Note: text bubbles keep `ChatBubble`'s proven CSS pseudo-element tail (matches
 the homepage splash); SVG is used where it's genuinely cleaner or where CSS
 tails get clipped (media) — receipts, media tails.
+
+## Storybook (`.storybook/`)
+
+- `@storybook/nextjs-vite` v10 (mirrors needless). `main.ts` globs
+  `../src/**/*.stories.*`; `preview.ts` imports `../src/app/globals.css` so
+  stories render with the real theme tokens.
+- **No `public/` dir** in heyscott (assets live in `src/app`), so `main.ts`
+  has NO `staticDirs` — adding one that points at `../public` breaks the build.
+- `@prismicio/next` re-exports server-only CJS preview utils the Vite bundler
+  can't parse. `main.ts` `viteFinal` aliases `@prismicio/next` →
+  `.storybook/mocks/prismicio-next.tsx` (a browser stub rendering plain
+  `<img>`/`<a>`) for Storybook only. If a new component imports `@prismicio/next`
+  and its story white-screens, add the missing export to that stub.
+- Stories co-located with components (`*.stories.tsx`). `mocks.ts` holds
+  self-contained mock Prismic data (data-URI image, so stories work offline).
+- Story files ARE type-checked by `pnpm build` (tsconfig globs `**/*.tsx`) —
+  keep them green, not just `build-storybook` (which uses esbuild, no typecheck).
 
 ### Resilient fetch (important)
 
