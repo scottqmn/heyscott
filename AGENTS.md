@@ -59,12 +59,20 @@ tokens (extends the theme — does not fork it).
   protrusion + `tailPath` tail) whose UNION is the speech-bubble outline; tail
   on the right for outgoing, mirrored left for incoming. Constants
   `BUBBLE_RADIUS`, `BUBBLE_TAIL_OUT`.
-- **`DynamicBubble.tsx`** (client) — measures its content (ResizeObserver,
-  border-box) and renders `BubbleSilhouette` sized to it. `variant='text'`
-  paints it as the background (with an inset same-color fallback so the tail
-  isn't covered and there's no flash); `variant='media'` uses it as a
-  `clipPath` so media **fills the bubble and is masked to the silhouette,
-  tail included**. This is the shape used everywhere.
+- **`DynamicBubble.tsx`** (client) — measures its content and renders
+  `BubbleSilhouette` sized to it. `variant='text'` paints it as the background
+  (with an inset same-color fallback so the tail isn't covered and there's no
+  flash); `variant='media'` uses it as a `clipPath` so media **fills the bubble
+  and is masked to the silhouette, tail included**. This is the shape used
+  everywhere.
+  - **Min-width hug (text):** an `inline-block` + `max-width` box does NOT
+    shrink to the widest wrapped line (CSS shrink-to-fit keeps the full
+    `max-width` once text wraps → ragged whitespace). `measureHugWidth` uses
+    `Range.getClientRects()` to find the widest rendered line and pins the
+    outer width to it (+ tail room), so the bubble hugs its text at every
+    length. `text-wrap: pretty` avoids last-line orphans. Re-runs on container
+    resize + `document.fonts.ready`. Chosen over `react-wrap-balancer` (extra
+    dep, per-instance scripts) and pure CSS (doesn't hug multi-line).
 - `ChatBubble` — thin wrapper over `DynamicBubble` (text). `Message` — base
   message: `ChatBubble` + scroll-focus + optional receipt.
 - `HeadingMessage` (incoming/grey, sized by `level` 1–6), `TextMessage`

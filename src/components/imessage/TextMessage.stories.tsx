@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { LOREM } from './mocks';
+import { ChatBubble } from '@/components/ChatBubble';
+import { LOREM, MEDIUM_TEXT, SHORT_TEXT } from './mocks';
 import { TextMessage } from './TextMessage';
 
 /**
@@ -53,4 +54,24 @@ export const Grouped: Story = {
  */
 export const LongLorem: Story = {
     args: { children: LOREM, receipt: 'read' },
+};
+
+/**
+ * Min-width hug across content lengths: each bubble shrinks to the smallest
+ * width that fits its wrapped text — short bubbles are tiny, medium wraps to a
+ * couple of tight lines, long fills up to the max and still hugs the widest
+ * line (no ragged whitespace). Shown on both sides.
+ */
+export const HugsAcrossLengths: Story = {
+    render: () => (
+        <div className='mx-auto max-w-xl'>
+            <ChatBubble variant='received'>{SHORT_TEXT}</ChatBubble>
+            <TextMessage focusOnScroll={false}>{SHORT_TEXT}</TextMessage>
+            <ChatBubble variant='received'>{MEDIUM_TEXT}</ChatBubble>
+            <TextMessage focusOnScroll={false}>{MEDIUM_TEXT}</TextMessage>
+            <TextMessage focusOnScroll={false} receipt='read'>
+                {LOREM}
+            </TextMessage>
+        </div>
+    ),
 };

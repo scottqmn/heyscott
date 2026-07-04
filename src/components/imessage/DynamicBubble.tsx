@@ -43,10 +43,37 @@ const FG: Record<BubbleDirection, string> = {
 };
 
 /**
+ * Measures the widest line the content actually wraps to and returns the
+ * minimal content-box width that hugs it. An `inline-block` + `max-width` box
+ * doesn't shrink to the widest wrapped line (CSS shrink-to-fit keeps the full
+ * `max-width` once text wraps, leaving trailing whitespace); measuring the
+ * rendered line rects and pinning the width to the widest one removes that
+ * slack so the bubble hugs its text. Returns `null` if it can't measure.
+ */
+function measureHugWidth(content: HTMLElement): number | null {
+    if (typeof document === 'undefined' || !document.createRange) return null;
+    const range = document.createRange();
+    range.selectNodeContents(content);
+    const rects = range.getClientRects();
+    let widest = 0;
+    for (let i = 0; i < rects.length; i++) {
+        widest = Math.max(widest, rects[i].width);
+    }
+    if (typeof range.detach === 'function') range.detach();
+    if (widest <= 0) return null;
+    const cs = getComputedStyle(content);
+    const padX =
+        parseFloat(cs.paddingLeft || '0') + parseFloat(cs.paddingRight || '0');
+    // +1px slack absorbs sub-pixel rounding so the widest line never re-wraps.
+    return Math.ceil(widest + padX) + 1;
+}
+
+/**
  * The unified iMessage bubble: one dynamic SVG shape (body + tail, from
- * {@link BubbleSilhouette}) that adapts to its content's size and to
- * incoming/outgoing. A ResizeObserver measures the content so the SVG matches
- * exactly as the bubble grows.
+ * {@link BubbleSilhouette}) that adapts to its content and to
+ * incoming/outgoing. For text it hugs the minimum width needed for the wrapped
+ * content (see {@link measureHugWidth}); a ResizeObserver keeps it in sync as
+ * the container resizes.
  */
 export const DynamicBubble = ({
     children,
@@ -54,20 +81,68 @@ export const DynamicBubble = ({
     variant = 'text',
     className,
 }: DynamicBubbleProps) => {
-    const ref = useRef<HTMLDivElement>(null);
+    const outerRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });
     const clipId = useId().replace(/:/g, '');
 
+    const applySize = (width: number, height: number) =>
+        setSize((prev) =>
+            prev.width === width && prev.height === height
+                ? prev
+                : { width, height }
+        );
+
+    // --- media: measure the content box, clip it to the silhouette ---------
     useIsoLayoutEffect(() => {
-        const el = ref.current;
+        if (variant !== 'media') return;
+        const el = contentRef.current;
         if (!el || typeof ResizeObserver === 'undefined') return;
-        const measure = () =>
-            setSize({ width: el.offsetWidth, height: el.offsetHeight });
+        const measure = () => applySize(el.offsetWidth, el.offsetHeight);
         measure();
         const observer = new ResizeObserver(measure);
         observer.observe(el);
         return () => observer.disconnect();
-    }, []);
+    }, [variant]);
+
+    // --- text: hug the widest wrapped line, then size the SVG to the box ----
+    useIsoLayoutEffect(() => {
+        if (variant !== 'text') return;
+        const outer = outerRef.current;
+        const content = contentRef.current;
+        if (!outer || !content) return;
+
+        const measure = () => {
+            // Release any pinned width so the content re-wraps at its max-width…
+            outer.style.width = '';
+            const hug = measureHugWidth(content);
+            // …then pin the outer to the hugging width (+ the tail-side room).
+            if (hug != null) outer.style.width = `${hug + BUBBLE_TAIL_OUT}px`;
+            applySize(outer.offsetWidth, outer.offsetHeight);
+        };
+
+        measure();
+
+        let cancelled = false;
+        const remeasure = () => {
+            if (!cancelled) measure();
+        };
+
+        // Re-hug when the surrounding column resizes (changes the max-width),
+        // and once web fonts finish loading (which can change text metrics).
+        const parent = outer.parentElement;
+        const observer =
+            typeof ResizeObserver !== 'undefined'
+                ? new ResizeObserver(remeasure)
+                : null;
+        if (observer && parent) observer.observe(parent);
+        document.fonts?.ready?.then(remeasure);
+
+        return () => {
+            cancelled = true;
+            observer?.disconnect();
+        };
+    }, [variant, direction, children]);
 
     const ready = size.width > 0 && size.height > 0;
 
@@ -94,7 +169,7 @@ export const DynamicBubble = ({
                     </svg>
                 )}
                 <div
-                    ref={ref}
+                    ref={contentRef}
                     className='block w-full overflow-hidden [&_img]:block [&_img]:w-full'
                     style={{
                         clipPath: ready ? `url(#${clipId})` : undefined,
@@ -116,9 +191,9 @@ export const DynamicBubble = ({
 
     return (
         <div
-            ref={ref}
+            ref={outerRef}
             className={clsx('relative inline-block max-w-full', className)}
-            style={{ color: FG[direction], ...tailPad }}
+            style={{ color: FG[direction], boxSizing: 'border-box', ...tailPad }}
         >
             {ready && (
                 <svg
@@ -138,10 +213,12 @@ export const DynamicBubble = ({
                 </svg>
             )}
             <div
+                ref={contentRef}
                 className='relative px-5 py-3 break-words'
                 style={{
                     backgroundColor: BG[direction],
                     borderRadius: BUBBLE_RADIUS,
+                    textWrap: 'pretty',
                 }}
             >
                 {children}

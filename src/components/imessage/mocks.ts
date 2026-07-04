@@ -42,6 +42,11 @@ export const mockTallImage: FilledImageFieldImage = {
     edit: { x: 0, y: 0, zoom: 1, background: 'transparent' },
 };
 
+/** Short / medium content, to show the bubble hugging across content lengths. */
+export const SHORT_TEXT = 'On it 👍';
+export const MEDIUM_TEXT =
+    'Rewrote heyscott on the modern stack this week — new blog, iMessage bubbles, and a Storybook.';
+
 /** A wall of text, to show the bubble body + tail SVG growing and wrapping. */
 export const LOREM =
     'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod ' +
