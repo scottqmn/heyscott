@@ -10,7 +10,7 @@ import {
     type ReactNode,
 } from 'react';
 import {
-    BubbleSilhouette,
+    BubbleMask,
     BUBBLE_RADIUS,
     BUBBLE_TAIL_OUT,
     type BubbleDirection,
@@ -69,11 +69,11 @@ function measureHugWidth(content: HTMLElement): number | null {
 }
 
 /**
- * The unified iMessage bubble: one dynamic SVG shape (body + tail, from
- * {@link BubbleSilhouette}) that adapts to its content and to
- * incoming/outgoing. For text it hugs the minimum width needed for the wrapped
- * content (see {@link measureHugWidth}); a ResizeObserver keeps it in sync as
- * the container resizes.
+ * The unified iMessage bubble: the original tail silhouette (from
+ * {@link BubbleMask}) that adapts to its content and to incoming/outgoing. For
+ * text it hugs the minimum width needed for the wrapped content (see
+ * {@link measureHugWidth}); a ResizeObserver keeps it in sync as the container
+ * resizes.
  */
 export const DynamicBubble = ({
     children,
@@ -84,7 +84,7 @@ export const DynamicBubble = ({
     const outerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });
-    const clipId = useId().replace(/:/g, '');
+    const maskId = useId().replace(/:/g, '');
 
     const applySize = (width: number, height: number) =>
         setSize((prev) =>
@@ -147,6 +147,7 @@ export const DynamicBubble = ({
     const ready = size.width > 0 && size.height > 0;
 
     if (variant === 'media') {
+        const maskUrl = ready ? `url(#${maskId})` : undefined;
         return (
             <div className={clsx('relative block w-full', className)}>
                 {ready && (
@@ -155,16 +156,12 @@ export const DynamicBubble = ({
                         aria-hidden
                     >
                         <defs>
-                            <clipPath
-                                id={clipId}
-                                clipPathUnits='userSpaceOnUse'
-                            >
-                                <BubbleSilhouette
-                                    width={size.width}
-                                    height={size.height}
-                                    direction={direction}
-                                />
-                            </clipPath>
+                            <BubbleMask
+                                id={maskId}
+                                width={size.width}
+                                height={size.height}
+                                direction={direction}
+                            />
                         </defs>
                     </svg>
                 )}
@@ -172,7 +169,8 @@ export const DynamicBubble = ({
                     ref={contentRef}
                     className='block w-full overflow-hidden [&_img]:block [&_img]:w-full'
                     style={{
-                        clipPath: ready ? `url(#${clipId})` : undefined,
+                        mask: maskUrl,
+                        WebkitMask: maskUrl,
                         borderRadius: ready ? undefined : BUBBLE_RADIUS,
                     }}
                 >
@@ -203,21 +201,30 @@ export const DynamicBubble = ({
                     viewBox={`0 0 ${size.width} ${size.height}`}
                     aria-hidden
                 >
-                    <g fill={BG[direction]}>
-                        <BubbleSilhouette
+                    <defs>
+                        <BubbleMask
+                            id={maskId}
                             width={size.width}
                             height={size.height}
                             direction={direction}
                         />
-                    </g>
+                    </defs>
+                    <rect
+                        width={size.width}
+                        height={size.height}
+                        fill={BG[direction]}
+                        mask={`url(#${maskId})`}
+                    />
                 </svg>
             )}
             <div
                 ref={contentRef}
                 className='relative px-5 py-3 break-words'
                 style={{
-                    backgroundColor: BG[direction],
-                    borderRadius: BUBBLE_RADIUS,
+                    // The SVG mask is the bubble once measured; before that a
+                    // plain rounded rect stands in so there's no flash.
+                    backgroundColor: ready ? 'transparent' : BG[direction],
+                    borderRadius: ready ? undefined : BUBBLE_RADIUS,
                     textWrap: 'pretty',
                 }}
             >

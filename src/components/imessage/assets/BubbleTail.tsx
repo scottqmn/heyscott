@@ -1,33 +1,34 @@
-import { clsx } from 'clsx';
-import { tailPath, type BubbleDirection } from '../bubbleShape';
+import { useId } from 'react';
+import { BubbleMask, type BubbleDirection } from '../bubbleShape';
 
 type BubbleTailProps = {
     direction: BubbleDirection;
     className?: string;
 };
 
-// Standalone tail chrome, drawn from the shared tailPath geometry (the same
-// curve unioned into the full bubble silhouette) at a fixed reference size.
-const STANDALONE_TAIL = tailPath(16, 22, 14, 8);
+const W = 92;
+const H = 54;
 
 /**
- * The iMessage tail on its own — useful as chrome / documentation. Fill
- * inherits `currentColor`; mirrored horizontally for incoming.
+ * A small standalone bubble showing the tail chrome, drawn from the shared
+ * {@link BubbleMask} so it's identical to real bubbles. Fill follows
+ * `currentColor`; set a text-color class to tint it.
  */
 export const BubbleTail = ({ direction, className }: BubbleTailProps) => {
+    const id = useId().replace(/:/g, '');
     return (
         <svg
-            width='26'
-            height='26'
-            viewBox='0 0 26 26'
-            fill='currentColor'
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
+            className={className}
             aria-hidden='true'
             focusable='false'
-            className={clsx(className, {
-                '-scale-x-100': direction === 'incoming',
-            })}
         >
-            <path d={STANDALONE_TAIL} />
+            <defs>
+                <BubbleMask id={id} width={W} height={H} direction={direction} />
+            </defs>
+            <rect width={W} height={H} fill='currentColor' mask={`url(#${id})`} />
         </svg>
     );
 };

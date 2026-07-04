@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { BubbleTail } from './BubbleTail';
 
 /**
- * The SVG bubble tail. Authored for the outgoing (right) side and mirrored for
- * incoming; fill follows `currentColor`, so a text-color class tints it to the
- * bubble color. Scaled up here for visibility.
+ * A small bubble showing the tail chrome — the same silhouette as real
+ * bubbles. Authored for the outgoing (right) side and mirrored for incoming;
+ * fill follows `currentColor`, so a text-color class tints it. Scaled up here.
  */
 const meta = {
     title: 'iMessage/Chrome/BubbleTail',
@@ -12,7 +12,7 @@ const meta = {
     parameters: { layout: 'centered' },
     decorators: [
         (Story) => (
-            <div className='[&_svg]:h-16 [&_svg]:w-16'>
+            <div className='[&_svg]:h-auto [&_svg]:w-48'>
                 <Story />
             </div>
         ),

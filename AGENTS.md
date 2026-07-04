@@ -54,17 +54,23 @@ A basic reusable library that renders content *as an iMessage conversation*,
 built on the unified dynamic-SVG bubble and the `--color-imessage-*` theme
 tokens (extends the theme — does not fork it).
 
-- **`bubbleShape.tsx`** — the single source of truth for the bubble silhouette:
-  `BubbleSilhouette` returns the SVG shapes (rounded-rect body inset by the tail
-  protrusion + `tailPath` tail) whose UNION is the speech-bubble outline; tail
-  on the right for outgoing, mirrored left for incoming. Constants
-  `BUBBLE_RADIUS`, `BUBBLE_TAIL_OUT`.
-- **`DynamicBubble.tsx`** (client) — measures its content and renders
-  `BubbleSilhouette` sized to it. `variant='text'` paints it as the background
-  (with an inset same-color fallback so the tail isn't covered and there's no
-  flash); `variant='media'` uses it as a `clipPath` so media **fills the bubble
-  and is masked to the silhouette, tail included**. This is the shape used
-  everywhere.
+- **`bubbleShape.tsx`** — the single source of truth for the bubble silhouette.
+  It reproduces heyscott's ORIGINAL human-made tail
+  (`Messages/components/Message/Message.module.scss`): a two-pseudo-element
+  trick — rounded body + same-color `::before` bulge + background-colored
+  `::after` that carves the concave underside. `BubbleMask` rebuilds that exact
+  composite as an SVG `<mask>` (white = body ∪ before, black = after), mirrored
+  for incoming. Tail metrics are the originals and, like the CSS, the tail is a
+  CONSTANT pixel size regardless of bubble size. Constants `BUBBLE_RADIUS` (25,
+  from the original), `BUBBLE_TAIL_OUT` (7). NOTE: don't "simplify" this to a
+  rounded-rect + separate tail path — that detaches the tail (leaves a notch);
+  the mask (with subtraction) is what makes the authentic scoop-and-hook.
+- **`DynamicBubble.tsx`** (client) — measures its content and renders the
+  `BubbleMask` sized to it. `variant='text'` paints a `<rect fill=color
+  mask=url(#id)>` as the bubble (content bg goes transparent once measured, with
+  a plain rounded-rect fallback before that so there's no flash); `variant=
+  'media'` applies the same mask via CSS `mask-image` so media **fills the
+  bubble and is masked to the silhouette, tail included**. Same shape for both.
   - **Min-width hug (text):** an `inline-block` + `max-width` box does NOT
     shrink to the widest wrapped line (CSS shrink-to-fit keeps the full
     `max-width` once text wraps → ragged whitespace). `measureHugWidth` uses
@@ -75,18 +81,18 @@ tokens (extends the theme — does not fork it).
     dep, per-instance scripts) and pure CSS (doesn't hug multi-line).
 - `ChatBubble` — thin wrapper over `DynamicBubble` (text). `Message` — base
   message: `ChatBubble` + scroll-focus + optional receipt.
-- `HeadingMessage` (incoming/grey, sized by `level` 1–6), `TextMessage`
-  (outgoing/blue), `MediaMessage` (outgoing image/embed attachment, masked to
-  the bubble via `DynamicBubble variant='media'`).
+- `HeadingMessage` (incoming/grey — body text style, no heading size/weight),
+  `TextMessage` (outgoing/blue), `MediaMessage` (outgoing image/embed
+  attachment, masked to the bubble via `DynamicBubble variant='media'`).
 - `MessageThread` — centered, readable-width conversation column.
 - `ConversationText` + `messageSerializers` — Prismic rich-text → conversation:
   **headings = incoming, paragraphs/lists/preformatted = outgoing, images/embeds
   = outgoing attachments**. Wired into the `RichText` slice, so blog post bodies
   render as conversations. `list`/`oList` pass through (bubbles can't nest in a
   `<ul>`).
-- SVG chrome in `assets/`: `BubbleTail` (standalone tail from the shared
-  `tailPath`, mirrored for incoming) and `ReadReceipt` (single check =
-  Delivered, double = Read).
+- SVG chrome in `assets/`: `BubbleTail` (a small standalone bubble rendered
+  from the shared `BubbleMask`, mirrored for incoming) and `ReadReceipt` (single
+  check = Delivered, double = Read).
 
 **Scroll focus effect:** `useInViewFocus` (IntersectionObserver, focus band via
 `FOCUS_ROOT_MARGIN`) dims off-focus messages to `UNFOCUSED_OPACITY` (**`0.6`,

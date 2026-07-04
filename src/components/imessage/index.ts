@@ -7,8 +7,7 @@ export { MessageThread } from './MessageThread';
 export { ConversationText, messageSerializers } from './ConversationText';
 export { DynamicBubble } from './DynamicBubble';
 export {
-    BubbleSilhouette,
-    tailPath,
+    BubbleMask,
     BUBBLE_RADIUS,
     BUBBLE_TAIL_OUT,
     type BubbleDirection,
