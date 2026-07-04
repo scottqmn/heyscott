@@ -1,0 +1,32 @@
+{
+    "id": "heading",
+    "type": "SharedSlice",
+    "name": "Heading",
+    "description": "A section heading with an optional label",
+    "variations": [
+        {
+            "id": "default",
+            "name": "Default",
+            "docURL": "...",
+            "version": "initial",
+            "description": "Default",
+            "imageUrl": "",
+            "primary": {
+                "heading": {
+                    "type": "StructuredText",
+                    "config": {
+                        "single": "heading2, heading3",
+                        "label": "Heading"
+                    }
+                },
+                "label": {
+                    "type": "Text",
+                    "config": {
+                        "label": "Label (optional)"
+                    }
+                }
+            },
+            "items": {}
+        }
+    ]
+}

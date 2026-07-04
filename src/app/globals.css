@@ -1,38 +1,94 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-@layer utilities {
-    .text-balance {
-        text-wrap: balance;
-    }
+@plugin '@tailwindcss/typography';
+
+/*
+ * heyscott theme — Tailwind v4, CSS-first @theme tokens.
+ * The site's identity is the iMessage splash: Helvetica Neue Light,
+ * black-on-white (white-on-black in dark mode), and chat bubbles in
+ * iMessage blue (sent) / grey (received). Those bubble colors are the
+ * one thing that must stay constant across light/dark — they carry the
+ * brand into the blog. Everything else is a semantic token per the
+ * fleet modernization playbook.
+ */
+
+@theme {
+    --font-sans:
+        'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue',
+        helvetica, arial, 'Lucida Grande', sans-serif;
+    --font-mono:
+        ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        'Liberation Mono', 'Courier New', monospace;
+
+    /* iMessage bubble palette — brand constant, identical in both themes */
+    --color-imessage-sent: #075b97;
+    --color-imessage-sent-foreground: #ffffff;
+    --color-imessage-received: #e5e5ea;
+    --color-imessage-received-foreground: #000000;
+
+    --radius-bubble: 25px;
+    --radius-bubble-lg: 35px;
+}
+
+/* Semantic tokens, themed. Light is the default; dark follows the OS. */
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-border: var(--border);
 }
 
 :root {
-    --sans-serif: 'HelveticaNeue-Light', 'Helvetica Neue Light',
-        'Helvetica Neue', helvetica, arial, 'Lucida Grande', sans-serif;
+    /* legacy variable names kept for the existing splash markup */
+    --sans-serif: var(--font-sans);
     --primary: #000;
     --background: #fff;
+
+    --foreground: #000;
+    --muted: #f2f2f7;
+    --muted-foreground: #6b6b70;
+    --accent: #075b97;
+    --border: #d1d1d6;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --background: #000;
         --primary: #fff;
+        --background: #000;
+
+        --foreground: #fff;
+        --muted: #1c1c1e;
+        --muted-foreground: #98989f;
+        --accent: #4aa3df;
+        --border: #2c2c2e;
     }
 }
 
-html,
-body {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+@layer base {
+    html {
+        font-family: var(--font-sans);
+    }
+    html,
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    body {
+        background-color: var(--background);
+        color: var(--foreground);
+    }
+}
+
+@utility text-balance {
+    text-wrap: balance;
 }
 
 @keyframes fadeInOut {
     0% {
         opacity: 1;
     }
-
     100% {
         opacity: 0.25;
     }
@@ -44,4 +100,18 @@ body {
     animation-iteration-count: infinite;
     animation-name: fadeInOut;
     animation-timing-function: ease-in-out;
+}
+
+/* Blog reading column — typography plugin tuned to the site palette. */
+.prose {
+    --tw-prose-body: var(--foreground);
+    --tw-prose-headings: var(--foreground);
+    --tw-prose-links: var(--accent);
+    --tw-prose-bold: var(--foreground);
+    --tw-prose-quotes: var(--foreground);
+    --tw-prose-quote-borders: var(--imessage-sent);
+    --tw-prose-code: var(--foreground);
+    --tw-prose-hr: var(--border);
+    --tw-prose-captions: var(--muted-foreground);
+    font-weight: 300;
 }

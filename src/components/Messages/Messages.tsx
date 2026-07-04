@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useState } from 'react';
 import { Message } from './components/Message';
 import { MESSAGES } from './constants';
@@ -8,12 +8,12 @@ import { MESSAGES } from './constants';
 export const Messages = () => {
     const [step, setStep] = useState(0);
 
-    const container = {
+    const container: Variants = {
         hidden: {},
         show: { transition: { staggerChildren: 2 } },
     };
 
-    const sentItem = {
+    const sentItem: Variants = {
         hidden: {
             opacity: 0,
             y: 25,
@@ -31,7 +31,7 @@ export const Messages = () => {
         },
     };
 
-    const receivedItem = {
+    const receivedItem: Variants = {
         hidden: {
             opacity: 0,
             y: 25,

@@ -1,0 +1,32 @@
+{
+    "id": "quote",
+    "type": "SharedSlice",
+    "name": "Quote",
+    "description": "Pull quote with optional attribution",
+    "variations": [
+        {
+            "id": "default",
+            "name": "Default",
+            "docURL": "...",
+            "version": "initial",
+            "description": "Default",
+            "imageUrl": "",
+            "primary": {
+                "quote": {
+                    "type": "StructuredText",
+                    "config": {
+                        "multi": "paragraph, strong, em",
+                        "label": "Quote"
+                    }
+                },
+                "attribution": {
+                    "type": "Text",
+                    "config": {
+                        "label": "Attribution (optional)"
+                    }
+                }
+            },
+            "items": {}
+        }
+    ]
+}

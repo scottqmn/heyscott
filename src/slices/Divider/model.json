@@ -1,0 +1,27 @@
+{
+    "id": "divider",
+    "type": "SharedSlice",
+    "name": "Divider",
+    "description": "Section separator",
+    "variations": [
+        {
+            "id": "default",
+            "name": "Default",
+            "docURL": "...",
+            "version": "initial",
+            "description": "Default",
+            "imageUrl": "",
+            "primary": {
+                "style": {
+                    "type": "Select",
+                    "config": {
+                        "label": "Style",
+                        "options": ["plain", "asterism"],
+                        "default_value": "plain"
+                    }
+                }
+            },
+            "items": {}
+        }
+    ]
+}

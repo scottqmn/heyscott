@@ -1,8 +1,10 @@
-import clsx from 'clsx';
+import { PrismicPreview } from '@prismicio/next';
 import type { Metadata } from 'next';
+import { repositoryName } from '@/prismicio';
 import './globals.css';
 
 export const metadata: Metadata = {
+    metadataBase: new URL('https://www.heyscott.com'),
     title: 'Hey Scott!',
     description: 'a developer based in Los Angeles, CA',
     openGraph: {
@@ -26,8 +28,9 @@ export default function RootLayout({
 }>) {
     return (
         <html lang='en'>
-            <body className='min-h-screen bg-[var(--background)] font-sans text-xl font-light text-[var(--primary)]'>
+            <body className='min-h-screen bg-background font-sans text-xl font-light text-foreground'>
                 {children}
+                <PrismicPreview repositoryName={repositoryName} />
             </body>
         </html>
     );
