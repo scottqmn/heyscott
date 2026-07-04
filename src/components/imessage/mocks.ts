@@ -24,6 +24,34 @@ export const mockImage: FilledImageFieldImage = {
     edit: { x: 0, y: 0, zoom: 1, background: 'transparent' },
 };
 
+const TALL_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='640' height='1040'>
+  <defs><linearGradient id='t' x1='0' y1='0' x2='0' y2='1'>
+    <stop offset='0' stop-color='%234aa3df'/><stop offset='1' stop-color='%23075b97'/>
+  </linearGradient></defs>
+  <rect width='640' height='1040' fill='url(%23t)'/>
+  <text x='320' y='530' font-family='sans-serif' font-size='44' fill='white' text-anchor='middle'>tall.jpg</text>
+</svg>`;
+
+/** A portrait attachment, to show the mask scaling to a tall bubble. */
+export const mockTallImage: FilledImageFieldImage = {
+    id: 'mock-tall-image',
+    url: `data:image/svg+xml;utf8,${TALL_SVG.replace(/\n\s*/g, '')}`,
+    alt: 'A tall placeholder attachment',
+    copyright: null,
+    dimensions: { width: 640, height: 1040 },
+    edit: { x: 0, y: 0, zoom: 1, background: 'transparent' },
+};
+
+/** A wall of text, to show the bubble body + tail SVG growing and wrapping. */
+export const LOREM =
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod ' +
+    'tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim ' +
+    'veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea ' +
+    'commodo consequat. Duis aute irure dolor in reprehenderit in voluptate ' +
+    'velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint ' +
+    'occaecat cupidatat non proident, sunt in culpa qui officia deserunt ' +
+    'mollit anim id est laborum.';
+
 /** A short conversation: headings (incoming) + text/list/image (outgoing). */
 export const mockConversation: RichTextField = [
     { type: 'heading1', text: 'Shipping the blog', spans: [] },

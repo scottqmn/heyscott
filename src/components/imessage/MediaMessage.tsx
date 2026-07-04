@@ -2,7 +2,7 @@
 
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
-import { BubbleTail } from './assets/BubbleTail';
+import { DynamicBubble } from './DynamicBubble';
 import { ReadReceipt, type ReceiptStatus } from './assets/ReadReceipt';
 import { FOCUSED_OPACITY, UNFOCUSED_OPACITY } from './constants';
 import { useInViewFocus } from './useInViewFocus';
@@ -19,10 +19,10 @@ type MediaMessageProps = {
 };
 
 /**
- * An image or embed rendered as an OUTGOING attachment (right-aligned, blue
- * tail) so media flows in the conversation like a sent photo. Uses the SVG
- * {@link BubbleTail} rather than the CSS pseudo-element tail, since the media
- * is clipped by `overflow-hidden` which would swallow a CSS tail.
+ * An image or embed rendered as an OUTGOING attachment. The media fills the
+ * bubble edge-to-edge and is masked to the speech-bubble silhouette — tail
+ * included — via {@link DynamicBubble}'s `media` variant, so the attachment
+ * takes the exact bubble shape rather than a rectangle floating inside one.
  */
 export const MediaMessage = ({
     children,
@@ -45,16 +45,10 @@ export const MediaMessage = ({
             style={{ opacity: dimmed ? UNFOCUSED_OPACITY : FOCUSED_OPACITY }}
         >
             <div className='flex justify-end'>
-                <figure
-                    className={clsx('relative max-w-[85%] sm:max-w-[75%]', className)}
-                >
-                    <div className='overflow-hidden rounded-[var(--radius-bubble)]'>
+                <figure className={clsx('max-w-[85%] sm:max-w-[75%]', className)}>
+                    <DynamicBubble direction='outgoing' variant='media'>
                         {children}
-                    </div>
-                    <BubbleTail
-                        direction='outgoing'
-                        className='absolute right-[-3px] bottom-0 text-imessage-sent'
-                    />
+                    </DynamicBubble>
                     {caption && (
                         <figcaption className='mt-1 pr-2 text-right text-sm text-muted-foreground'>
                             {caption}

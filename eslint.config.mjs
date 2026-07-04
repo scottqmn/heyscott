@@ -8,6 +8,7 @@ const config = [
             'node_modules/**',
             'out/**',
             'public/**',
+            'storybook-static/**',
             'prismicio-types.d.ts',
         ],
     },

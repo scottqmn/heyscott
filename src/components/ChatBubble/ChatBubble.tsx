@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
-import styles from './ChatBubble.module.scss';
+import { DynamicBubble } from '@/components/imessage/DynamicBubble';
 
 type ChatBubbleProps = {
     children: ReactNode;
@@ -12,9 +12,9 @@ type ChatBubbleProps = {
 };
 
 /**
- * The iMessage chat bubble, reusable across the site. Renders the same
- * blue/grey rounded bubbles with tails as the homepage splash, so the blog
- * feels native to heyscott's iMessage identity.
+ * The iMessage chat bubble. Renders through {@link DynamicBubble}, so the
+ * bubble body + tail are one dynamic SVG shape (shared with masked media),
+ * colored from the theme's `--color-imessage-*` tokens.
  */
 export const ChatBubble = ({
     children,
@@ -30,9 +30,12 @@ export const ChatBubble = ({
                 grouped ? 'mt-1' : 'mt-3'
             )}
         >
-            <div className={clsx(styles.bubble, styles[variant], className)}>
+            <DynamicBubble
+                direction={variant === 'sent' ? 'outgoing' : 'incoming'}
+                className={clsx('max-w-[85%]', className)}
+            >
                 {children}
-            </div>
+            </DynamicBubble>
         </div>
     );
 };

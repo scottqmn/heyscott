@@ -1,7 +1,7 @@
 import { PrismicNextImage } from '@prismicio/next';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { MediaMessage } from './MediaMessage';
-import { mockImage } from './mocks';
+import { mockImage, mockTallImage } from './mocks';
 
 /**
  * Images and embeds render as OUTGOING attachments (right-aligned, blue SVG
@@ -35,6 +35,16 @@ export const ImageWithReceipt: Story = {
     args: {
         receipt: 'read',
         children: <PrismicNextImage field={mockImage} className='h-auto w-full' />,
+    },
+};
+
+/** A portrait image — the mask scales to a tall bubble, tail still masked. */
+export const TallImage: Story = {
+    args: {
+        caption: 'tall.jpg',
+        children: (
+            <PrismicNextImage field={mockTallImage} className='h-auto w-full' />
+        ),
     },
 };
 

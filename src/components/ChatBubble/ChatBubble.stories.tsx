@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { LOREM } from '@/components/imessage/mocks';
 import { ChatBubble } from './ChatBubble';
 
 /**
@@ -44,6 +45,19 @@ export const Conversation: Story = {
             <ChatBubble variant='received' grouped>
                 Talk soon?
             </ChatBubble>
+        </div>
+    ),
+};
+
+/**
+ * Long content on both sides — shows the dynamic SVG bubble body + tail
+ * growing and wrapping as each bubble gets tall.
+ */
+export const LongContent: Story = {
+    render: () => (
+        <div className='mx-auto max-w-xl'>
+            <ChatBubble variant='received'>{LOREM}</ChatBubble>
+            <ChatBubble variant='sent'>{LOREM}</ChatBubble>
         </div>
     ),
 };

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { LOREM } from './mocks';
 import { TextMessage } from './TextMessage';
 
 /**
@@ -44,4 +45,12 @@ export const Grouped: Story = {
             </TextMessage>
         </div>
     ),
+};
+
+/**
+ * A wall of Lorem ipsum — shows the bubble body + tail SVG growing and the
+ * text wrapping as the bubble gets tall.
+ */
+export const LongLorem: Story = {
+    args: { children: LOREM, receipt: 'read' },
 };

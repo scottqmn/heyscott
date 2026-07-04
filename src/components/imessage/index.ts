@@ -5,6 +5,14 @@ export { TextMessage } from './TextMessage';
 export { MediaMessage } from './MediaMessage';
 export { MessageThread } from './MessageThread';
 export { ConversationText, messageSerializers } from './ConversationText';
+export { DynamicBubble } from './DynamicBubble';
+export {
+    BubbleSilhouette,
+    tailPath,
+    BUBBLE_RADIUS,
+    BUBBLE_TAIL_OUT,
+    type BubbleDirection,
+} from './bubbleShape';
 export { BubbleTail } from './assets/BubbleTail';
 export { ReadReceipt } from './assets/ReadReceipt';
 export type { ReceiptStatus } from './assets/ReadReceipt';

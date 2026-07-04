@@ -51,32 +51,45 @@ bubbles in iMessage blue (`--color-imessage-sent` `#075b97`) / grey
 ## iMessage message-bubble component library (`src/components/imessage/`)
 
 A basic reusable library that renders content *as an iMessage conversation*,
-built on top of the `ChatBubble` primitive and the `--color-imessage-*` theme
+built on the unified dynamic-SVG bubble and the `--color-imessage-*` theme
 tokens (extends the theme — does not fork it).
 
-- `Message` — base message: `ChatBubble` + scroll-focus + optional receipt.
-  Props: `direction` (`incoming`|`outgoing`), `grouped`, `receipt`,
-  `focusOnScroll`.
+- **`bubbleShape.tsx`** — the single source of truth for the bubble silhouette:
+  `BubbleSilhouette` returns the SVG shapes (rounded-rect body inset by the tail
+  protrusion + `tailPath` tail) whose UNION is the speech-bubble outline; tail
+  on the right for outgoing, mirrored left for incoming. Constants
+  `BUBBLE_RADIUS`, `BUBBLE_TAIL_OUT`.
+- **`DynamicBubble.tsx`** (client) — measures its content (ResizeObserver,
+  border-box) and renders `BubbleSilhouette` sized to it. `variant='text'`
+  paints it as the background (with an inset same-color fallback so the tail
+  isn't covered and there's no flash); `variant='media'` uses it as a
+  `clipPath` so media **fills the bubble and is masked to the silhouette,
+  tail included**. This is the shape used everywhere.
+- `ChatBubble` — thin wrapper over `DynamicBubble` (text). `Message` — base
+  message: `ChatBubble` + scroll-focus + optional receipt.
 - `HeadingMessage` (incoming/grey, sized by `level` 1–6), `TextMessage`
-  (outgoing/blue), `MediaMessage` (outgoing image/embed attachment — uses the
-  SVG `BubbleTail` because `overflow-hidden` clips the CSS pseudo tail).
+  (outgoing/blue), `MediaMessage` (outgoing image/embed attachment, masked to
+  the bubble via `DynamicBubble variant='media'`).
 - `MessageThread` — centered, readable-width conversation column.
 - `ConversationText` + `messageSerializers` — Prismic rich-text → conversation:
   **headings = incoming, paragraphs/lists/preformatted = outgoing, images/embeds
   = outgoing attachments**. Wired into the `RichText` slice, so blog post bodies
   render as conversations. `list`/`oList` pass through (bubbles can't nest in a
   `<ul>`).
-- SVG chrome in `assets/`: `BubbleTail` (mirrored via `-scale-x-100` for
-  incoming) and `ReadReceipt` (single check = Delivered, double = Read).
+- SVG chrome in `assets/`: `BubbleTail` (standalone tail from the shared
+  `tailPath`, mirrored for incoming) and `ReadReceipt` (single check =
+  Delivered, double = Read).
 
 **Scroll focus effect:** `useInViewFocus` (IntersectionObserver, focus band via
 `FOCUS_ROOT_MARGIN`) dims off-focus messages to `UNFOCUSED_OPACITY` (**`0.6`,
 tunable in `constants.ts`**); the in-view message stays full opacity. Defaults
 to focused during SSR / before the observer attaches, so there's no dim flash.
 
-Note: text bubbles keep `ChatBubble`'s proven CSS pseudo-element tail (matches
-the homepage splash); SVG is used where it's genuinely cleaner or where CSS
-tails get clipped (media) — receipts, media tails.
+Note: text and media bubbles share ONE silhouette (`bubbleShape.tsx`). The
+homepage splash (`src/components/Messages`) still uses its own SCSS bubble and
+is intentionally left alone. When changing the bubble/tail shape, edit
+`bubbleShape.tsx` only — everything else derives from it. To eyeball the
+geometry without a browser, rasterize `BubbleSilhouette` to PNG with `sharp`.
 
 ## Storybook (`.storybook/`)
 
