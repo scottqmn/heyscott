@@ -48,25 +48,28 @@ bubbles in iMessage blue (`--color-imessage-sent` `#075b97`) / grey
   `SliceZone`/`getPost` machinery renders `/blog/[uid]` (see the site shell
   below).
 
-## Site shell — original per-page rendering
+## Site shell — JUST the splash (matches heyscott.com)
 
-The routes render their own content directly (NOT a global takeover):
+The live site is a single splash screen and NOTHING else. `/`
+(`src/app/page.tsx`) renders ONLY `src/components/Messages` (its own SCSS
+bubble + framer-motion stagger animation): a "Hey Scott" **sent** bubble, then
+"Hey! I'm a little busy at the moment." / "Talk soon?" **received** bubbles — no
+links, no nav. This is a pixel match to production heyscott.com; the copy +
+animation live in `Messages/constants.ts` + `Messages/Messages.tsx`. Don't add
+links or other content to `/` unless the live site does.
 
-- `/` (`src/app/page.tsx`) — the original iMessage **splash**
-  (`src/components/Messages`, its own SCSS bubble) + a "read the blog" link.
-- `/blog` — a per-page blog index (received-side `ChatBubble` list) with the
-  bottom `PostListComposer`.
-- `/blog/[uid]` — the post page rendering the Prismic `SliceZone`.
+**Not wired into the live site right now:** the blog pages and the whole
+Tailwind-v4 iMessage component library. The `/blog` index + `/blog/[uid]` post
+routes were REMOVED (only Prismic preview API + `/slice-simulator` tooling
+routes remain besides `/`). `src/prismicio.ts` keeps an inert `blog_post` route
+mapping for when the blog returns.
 
-**Reverted feature — the "whole site is one conversation" shell.** There WAS a
-global-conversation takeover (`src/components/conversation/`: `ConversationProvider`
-in the root layout, route pages rendering `null`, content derived from the URL).
-It was removed — the routes above render normally again. The reusable iMessage
-component library it was built on is kept in full (see below); only the
-app-level takeover + its `src/components/conversation/` glue and the `/about`
-route were deleted. `src/lib/posts.ts` (`PLACEHOLDER_POSTS` / `BlogPostLink`) is
-now just `{title, slug}` — the `body`/`getPlaceholderPost` that only fed the
-conversation are gone.
+**Kept in the codebase (just unmounted):** the entire iMessage component library
++ all Storybook stories — see below. A prior "whole site is one persistent
+conversation" takeover (`src/components/conversation/`, pages rendering `null`)
+was also built and then fully reverted. `src/lib/posts.ts`
+(`PLACEHOLDER_POSTS` / `BlogPostLink`) is now just `{title, slug}`, driving the
+`PostListComposer` post list in Storybook.
 
 - **`PostListComposer`** (`src/components/PostListComposer`) — a bottom-fixed
   iMessage compose bar (pill + send button) that pops up the blog-post list.
