@@ -20,7 +20,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Driven by `ConversationText` + `messageSerializers` (as the blog uses it). */
+/** Driven by `ConversationText` (as the blog uses it) — grouped automatically. */
 export const FromRichText: Story = {
     args: { field: mockConversation },
     decorators: [

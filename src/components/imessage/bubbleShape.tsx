@@ -26,6 +26,38 @@ const BEFORE_INSET = 13; // ::before left edge sits 13px inside the body edge
 const BEFORE_CORNER_RX = 16; // ::before bottom-inner corner (16px 14px)
 const BEFORE_CORNER_RY = 14;
 const AFTER_CORNER = 10; // ::after bottom-inner corner radius
+/** Reduced corner radius on the tail-side edge where messages stack in a group. */
+const GROUPED_RADIUS = 6;
+
+type Corners = { tl: number; tr: number; br: number; bl: number };
+
+/**
+ * A rounded-rectangle body with independent corner radii, authored for the
+ * outgoing side and mirrored (in JS) for incoming. Grouped bubbles flatten the
+ * tail-side corners here, the way real iMessage tightens a stack.
+ */
+function bodyPath(
+    bw: number,
+    height: number,
+    { tl, tr, br, bl }: Corners,
+    mirror: boolean,
+    totalWidth: number
+): string {
+    const mx = (x: number) => (mirror ? totalWidth - x : x);
+    const s = mirror ? 0 : 1; // arc sweep — flips with the mirror to stay convex
+    return [
+        `M ${mx(tl)} 0`,
+        `H ${mx(bw - tr)}`,
+        `A ${tr} ${tr} 0 0 ${s} ${mx(bw)} ${tr}`,
+        `V ${height - br}`,
+        `A ${br} ${br} 0 0 ${s} ${mx(bw - br)} ${height}`,
+        `H ${mx(bl)}`,
+        `A ${bl} ${bl} 0 0 ${s} ${mx(0)} ${height - bl}`,
+        `V ${tl}`,
+        `A ${tl} ${tl} 0 0 ${s} ${mx(tl)} 0`,
+        'Z',
+    ].join(' ');
+}
 
 /**
  * The tail-hook as a single path. Authored for the outgoing (bottom-right)
@@ -64,28 +96,51 @@ type BubbleClipProps = {
     width: number;
     height: number;
     direction: BubbleDirection;
+    /** Draw the tail. Omitted for grouped messages that aren't the group's last. */
+    tail?: boolean;
+    /** Flatten the tail-side TOP corner (a same-side message sits above). */
+    flattenTop?: boolean;
+    /** Flatten the tail-side BOTTOM corner (a same-side message sits below). */
+    flattenBottom?: boolean;
 };
 
 /**
  * A `<clipPath>` (userSpaceOnUse) whose region is the original bubble+tail
- * silhouette: a rounded body unioned with the tail hook. `width` includes the
- * {@link BUBBLE_TAIL_OUT} protrusion, so the body is `width - BUBBLE_TAIL_OUT`
- * wide and the tail tip lands at (`width`, `height`) — mirrored to the left for
- * incoming.
+ * silhouette: a rounded body optionally unioned with the tail hook. `width`
+ * includes the {@link BUBBLE_TAIL_OUT} protrusion, so the body is
+ * `width - BUBBLE_TAIL_OUT` wide and the tail tip lands at (`width`, `height`) —
+ * mirrored to the left for incoming.
  *
- * Reference it via `clip-path: url(#id)` from an SVG `<rect>` (text bubble) or
- * an HTML element (masked media).
+ * Grouped messages set `tail={false}` (no hook) and flatten the tail-side
+ * corners that touch their group neighbors. Reference it via
+ * `clip-path: url(#id)` from an SVG `<rect>` (text) or an HTML element (media).
  */
-export function BubbleClip({ id, width, height, direction }: BubbleClipProps) {
+export function BubbleClip({
+    id,
+    width,
+    height,
+    direction,
+    tail = true,
+    flattenTop = false,
+    flattenBottom = false,
+}: BubbleClipProps) {
     const bw = width - BUBBLE_TAIL_OUT;
     const r = Math.max(0, Math.min(BUBBLE_RADIUS, bw / 2, height / 2));
+    const flat = Math.min(GROUPED_RADIUS, r);
     const mirror = direction === 'incoming';
-    // Body sits on the tail-opposite side: left for outgoing, right for incoming.
-    const bodyX = mirror ? BUBBLE_TAIL_OUT : 0;
+    // Tail-side corners are the top/bottom-right (mirrored to the left for
+    // incoming). Flatten them where the bubble stacks; the bottom-right corner
+    // stays full when the tail is drawn (the hook owns it).
+    const corners: Corners = {
+        tl: r,
+        bl: r,
+        tr: flattenTop ? flat : r,
+        br: tail ? r : flattenBottom ? flat : r,
+    };
     return (
         <clipPath id={id} clipPathUnits='userSpaceOnUse'>
-            <rect x={bodyX} y={0} width={bw} height={height} rx={r} ry={r} />
-            <path d={tailHookPath(bw, height, mirror, width)} />
+            <path d={bodyPath(bw, height, corners, mirror, width)} />
+            {tail && <path d={tailHookPath(bw, height, mirror, width)} />}
         </clipPath>
     );
 }

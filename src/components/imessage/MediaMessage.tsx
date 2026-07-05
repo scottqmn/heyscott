@@ -12,6 +12,8 @@ type MediaMessageProps = {
     /** Optional caption shown beneath the attachment. */
     caption?: ReactNode;
     grouped?: boolean;
+    /** Draw the tail. Grouped messages omit it except the group's last. */
+    tail?: boolean;
     revealOnScroll?: boolean;
     className?: string;
 };
@@ -27,6 +29,7 @@ export const MediaMessage = ({
     children,
     caption,
     grouped = false,
+    tail = true,
     revealOnScroll = true,
     className,
 }: MediaMessageProps) => {
@@ -44,7 +47,12 @@ export const MediaMessage = ({
         >
             <div className='flex justify-start'>
                 <figure className={clsx('max-w-[85%] sm:max-w-[75%]', className)}>
-                    <DynamicBubble direction='incoming' variant='media'>
+                    <DynamicBubble
+                        direction='incoming'
+                        variant='media'
+                        tail={tail}
+                        grouped={grouped}
+                    >
                         {children}
                     </DynamicBubble>
                     {caption && (

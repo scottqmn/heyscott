@@ -4,7 +4,7 @@ export { HeadingMessage } from './HeadingMessage';
 export { TextMessage } from './TextMessage';
 export { MediaMessage } from './MediaMessage';
 export { MessageThread } from './MessageThread';
-export { ConversationText, messageSerializers } from './ConversationText';
+export { ConversationText } from './ConversationText';
 export { DynamicBubble } from './DynamicBubble';
 export {
     BubbleClip,

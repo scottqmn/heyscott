@@ -13,8 +13,10 @@ export type MessageProps = {
     children: ReactNode;
     /** `incoming` = grey, left-aligned; `outgoing` = blue, right-aligned. */
     direction?: MessageDirection;
-    /** Tighten spacing when this message follows one from the same sender. */
+    /** Tighten spacing + flatten the top corner when following a same-side one. */
     grouped?: boolean;
+    /** Draw the tail. Grouped messages omit it except the group's last. */
+    tail?: boolean;
     /** Delivered/read status, shown under outgoing messages only. */
     receipt?: ReceiptStatus | null;
     /** Fade in from {@link HIDDEN_OPACITY} the first time it scrolls into view. */
@@ -25,12 +27,15 @@ export type MessageProps = {
 /**
  * A single iMessage-style message: the {@link ChatBubble} primitive (colors +
  * tail from the theme) wrapped with the one-way scroll reveal and an optional
- * read receipt. The base building block of the message library.
+ * read receipt. The base building block of the message library. Grouping
+ * (`tail`/`grouped`) is normally computed by {@link MessageThread} from the
+ * message sequence rather than set by hand.
  */
 export const Message = ({
     children,
     direction = 'incoming',
     grouped = false,
+    tail = true,
     receipt = null,
     revealOnScroll = true,
     className,
@@ -47,11 +52,13 @@ export const Message = ({
             <ChatBubble
                 variant={direction === 'outgoing' ? 'sent' : 'received'}
                 grouped={grouped}
+                tail={tail}
                 className={className}
             >
                 {children}
             </ChatBubble>
-            {receipt && direction === 'outgoing' && (
+            {/* Receipt only on the group's last outgoing message (the one with the tail). */}
+            {receipt && tail && direction === 'outgoing' && (
                 <ReadReceipt status={receipt} />
             )}
         </div>

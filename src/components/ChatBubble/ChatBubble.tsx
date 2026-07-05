@@ -6,8 +6,10 @@ type ChatBubbleProps = {
     children: ReactNode;
     /** `sent` = blue, right-aligned; `received` = grey, left-aligned. */
     variant?: 'sent' | 'received';
-    /** Tighten spacing when this bubble follows one of the same variant. */
+    /** Tighten spacing + flatten the top corner when following a same-side one. */
     grouped?: boolean;
+    /** Draw the tail (omitted for grouped messages that aren't the last). */
+    tail?: boolean;
     className?: string;
 };
 
@@ -20,6 +22,7 @@ export const ChatBubble = ({
     children,
     variant = 'received',
     grouped = false,
+    tail = true,
     className,
 }: ChatBubbleProps) => {
     return (
@@ -32,6 +35,8 @@ export const ChatBubble = ({
         >
             <DynamicBubble
                 direction={variant === 'sent' ? 'outgoing' : 'incoming'}
+                tail={tail}
+                grouped={grouped}
                 className={clsx('max-w-[85%]', className)}
             >
                 {children}

@@ -89,11 +89,24 @@ tokens (extends the theme — does not fork it).
   attachment, clipped to the bubble via `DynamicBubble variant='media'`).
   **Direction mapping is inverted from the obvious**: headings are the outgoing
   (sent/right) side, body content is incoming (received/left).
-- `MessageThread` — centered, readable-width conversation column.
-- `ConversationText` + `messageSerializers` — Prismic rich-text → conversation:
-  **headings = outgoing, paragraphs/lists/preformatted/images/embeds =
-  incoming**. Wired into the `RichText` slice, so blog post bodies render as
-  conversations. `list`/`oList` pass through (bubbles can't nest in a `<ul>`).
+- `MessageThread` — centered conversation column that ALSO computes
+  **grouping** from the child sequence: consecutive same-side messages form a
+  run, and it passes each child `tail` (true only on the run's LAST message)
+  and `grouped` (a same-side message precedes it) via `cloneElement`. Grouped
+  bubbles drop the tail (except the last), tighten spacing, and flatten the
+  tail-side corners (`BubbleClip` `flattenTop`/`flattenBottom`, radius
+  `GROUPED_RADIUS`). It reads each child's side from the component type
+  (`HeadingMessage`=outgoing, `TextMessage`/`MediaMessage`=incoming) or a
+  `Message`'s `direction`. **Don't hand-set `tail`/`grouped`** — the thread
+  derives them; messages must be DIRECT children of `MessageThread` for this to
+  work (see next point).
+- `ConversationText` — Prismic rich-text → conversation: **headings = outgoing,
+  paragraphs/lists/preformatted/images/embeds = incoming**. It builds the
+  message elements itself (one per block, inline formatting via a per-block
+  `PrismicRichText` with inline-only serializers) and passes them as DIRECT
+  children of `MessageThread` — that's what lets the thread compute grouping for
+  the blog. (It no longer uses a single flat `PrismicRichText`, whose opaque
+  output the thread couldn't introspect.) Wired into the `RichText` slice.
 - **Scroll reveal** (`useScrollReveal`): ONE-WAY. A message starts at
   `HIDDEN_OPACITY` (0.25, tunable in `constants.ts`) and fades to full opacity
   the first time it enters view, then STAYS revealed (observer disconnects — it

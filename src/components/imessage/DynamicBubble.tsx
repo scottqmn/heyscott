@@ -30,6 +30,10 @@ type DynamicBubbleProps = {
      * tail included.
      */
     variant?: 'text' | 'media';
+    /** Draw the tail. Grouped messages omit it except the group's last. */
+    tail?: boolean;
+    /** A same-side message sits above (part of a group) — tightens the top. */
+    grouped?: boolean;
     className?: string;
 };
 
@@ -146,12 +150,18 @@ export const DynamicBubble = ({
     children,
     direction,
     variant = 'text',
+    tail = true,
+    grouped = false,
     className,
 }: DynamicBubbleProps) => {
     const outerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });
     const clipId = useId().replace(/:/g, '');
+
+    // Grouped corners: flatten the tail-side top when a same-side message sits
+    // above (grouped), and the tail-side bottom when one sits below (no tail).
+    const clipProps = { tail, flattenTop: grouped, flattenBottom: !tail };
 
     const applySize = (width: number, height: number) =>
         setSize((prev) =>
@@ -232,6 +242,7 @@ export const DynamicBubble = ({
                                 width={size.width}
                                 height={size.height}
                                 direction={direction}
+                                {...clipProps}
                             />
                         </defs>
                     </svg>
@@ -278,6 +289,7 @@ export const DynamicBubble = ({
                             width={size.width}
                             height={size.height}
                             direction={direction}
+                                {...clipProps}
                         />
                     </defs>
                     <rect
