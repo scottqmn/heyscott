@@ -1,5 +1,5 @@
 import { PrismicPreview } from '@prismicio/next';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import {
     ConversationProvider,
     ConversationView,
@@ -24,6 +24,12 @@ export const metadata: Metadata = {
             },
         ],
     },
+};
+
+// `viewport-fit=cover` makes the `env(safe-area-inset-*)` values non-zero on
+// iOS, so the bottom compose bar can pad itself clear of the home indicator.
+export const viewport: Viewport = {
+    viewportFit: 'cover',
 };
 
 export default function RootLayout({

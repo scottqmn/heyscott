@@ -14,15 +14,17 @@ function isInViewport(el: HTMLElement): boolean {
 /**
  * One-way scroll reveal. The element starts hidden (see `HIDDEN_OPACITY`) and
  * becomes `revealed` the first time it enters view — then STAYS revealed, so it
- * never fades back out. Degrades to immediately revealed where
- * IntersectionObserver is unavailable.
+ * never fades back out.
  *
- * Elements that are ALREADY on screen when they mount are revealed
- * synchronously here, NOT via the observer: IntersectionObserver's single
- * initial callback for an already-intersecting element can be dropped across
- * React StrictMode's observe→disconnect→observe churn, which left on-load
- * messages stuck at the start opacity. The observer is only used to catch
- * elements that are still below the fold and scroll in later.
+ * The reveal is driven by a plain geometry check (`isInViewport`) re-run on
+ * every scroll/resize, NOT by IntersectionObserver alone. On iOS Safari the
+ * observer's callbacks are unreliable — they can be dropped for elements that
+ * are already intersecting on mount, and can fail to fire during momentum
+ * scrolling — which left messages stuck at the start opacity and never
+ * revealing as you scrolled them into view. A capture-phase `scroll` listener
+ * catches scrolling from ANY container (window or a nested scroller) and
+ * doesn't depend on the observer at all; IntersectionObserver is kept only as
+ * an additional, best-effort trigger where it behaves.
  */
 export function useScrollReveal<T extends HTMLElement>(
     rootMargin: string = REVEAL_ROOT_MARGIN
@@ -32,30 +34,49 @@ export function useScrollReveal<T extends HTMLElement>(
 
     useEffect(() => {
         const el = ref.current;
-        if (!el || typeof IntersectionObserver === 'undefined') {
+        if (!el) {
             setRevealed(true);
             return;
         }
 
-        // Already visible on mount → reveal now (the CSS opacity transition
-        // still animates the fade-in). Don't wait on the observer's initial
-        // callback, which can be missed for elements already in view.
-        if (isInViewport(el)) {
+        let done = false;
+        const check = () => {
+            if (done || !isInViewport(el)) return;
+            done = true;
             setRevealed(true);
-            return;
+            teardown();
+        };
+
+        // Reveal as it scrolls into view. Capture phase so scrolls from any
+        // scroll container (window or a nested one) are seen. Also re-check
+        // just after mount (rAF + a short timeout) to catch late layout on
+        // iOS, where geometry can settle a frame or two after the effect runs.
+        window.addEventListener('scroll', check, { passive: true, capture: true });
+        window.addEventListener('resize', check, { passive: true });
+        const raf = requestAnimationFrame(check);
+        const timer = setTimeout(check, 300);
+
+        let observer: IntersectionObserver | undefined;
+        if (typeof IntersectionObserver !== 'undefined') {
+            observer = new IntersectionObserver(
+                (entries) => entries.some((e) => e.isIntersecting) && check(),
+                { rootMargin, threshold: 0 }
+            );
+            observer.observe(el);
         }
 
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setRevealed(true);
-                    observer.disconnect(); // once revealed, stay revealed
-                }
-            },
-            { rootMargin, threshold: 0 }
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
+        function teardown() {
+            window.removeEventListener('scroll', check, { capture: true });
+            window.removeEventListener('resize', check);
+            cancelAnimationFrame(raf);
+            clearTimeout(timer);
+            observer?.disconnect();
+        }
+
+        // Reveal immediately if already on screen at mount.
+        check();
+
+        return teardown;
     }, [rootMargin]);
 
     return { ref, revealed };

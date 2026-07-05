@@ -30,21 +30,27 @@ export const PostListComposer = ({
     const toggle = () => setOpen((v) => !v);
 
     return (
-        <div className='pointer-events-none fixed inset-x-0 bottom-0 z-50'>
+        // NOTE: no `pointer-events-none` on this wrapper. iOS Safari does not
+        // reliably re-enable *touch* events on a `pointer-events:auto` child of
+        // a `pointer-events:none` ancestor, so that pattern made the bar
+        // untappable on iPhone (it worked everywhere else). When the sheet is
+        // closed the wrapper only spans the bar itself (the list collapses to
+        // `max-h-0`), so it doesn't need to let taps pass through.
+        <div className='fixed inset-x-0 bottom-0 z-50'>
             {/* Tap-away overlay to close the sheet. */}
             {open && (
                 <button
                     type='button'
                     aria-label='Close post list'
                     onClick={() => setOpen(false)}
-                    className='pointer-events-auto fixed inset-0 -z-10 cursor-default'
+                    className='fixed inset-0 -z-10 cursor-default'
                 />
             )}
 
             {/* The post list, rising above the compose bar. */}
             <div
                 className={clsx(
-                    'pointer-events-auto overflow-hidden transition-[max-height] duration-300 ease-out',
+                    'overflow-hidden transition-[max-height] duration-300 ease-out',
                     open ? 'max-h-[65vh]' : 'max-h-0'
                 )}
             >
@@ -55,13 +61,15 @@ export const PostListComposer = ({
                 </div>
             </div>
 
-            {/* The compose bar. */}
-            <div className='pointer-events-auto border-t border-border bg-background/85 backdrop-blur'>
+            {/* The compose bar. Pad the bottom past the iOS home indicator /
+                bottom toolbar (safe-area inset) so the controls aren't tucked
+                under system UI where taps get swallowed. */}
+            <div className='border-t border-border bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur'>
                 <div className='mx-auto flex max-w-xl items-center gap-2 px-4 py-2.5'>
                     <button
                         type='button'
                         onClick={toggle}
-                        className='flex-1 rounded-full border border-border px-4 py-2 text-left text-base text-muted-foreground transition-colors hover:border-muted-foreground/40'
+                        className='flex-1 touch-manipulation rounded-full border border-border px-4 py-2 text-left text-base text-muted-foreground transition-colors hover:border-muted-foreground/40'
                     >
                         {placeholder}
                     </button>
@@ -70,7 +78,7 @@ export const PostListComposer = ({
                         onClick={toggle}
                         aria-expanded={open}
                         aria-label={open ? 'Hide posts' : 'Show posts'}
-                        className='flex size-9 shrink-0 items-center justify-center rounded-full bg-imessage-sent text-imessage-sent-foreground transition-transform active:scale-95'
+                        className='flex size-9 shrink-0 touch-manipulation items-center justify-center rounded-full bg-imessage-sent text-imessage-sent-foreground transition-transform active:scale-95'
                     >
                         <svg
                             viewBox='0 0 24 24'
