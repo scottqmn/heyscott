@@ -102,9 +102,10 @@ tokens (extends the theme — does not fork it).
   **grouping** from the child sequence: consecutive same-side messages form a
   run, and it passes each child `tail` (true only on the run's LAST message)
   and `grouped` (a same-side message precedes it) via `cloneElement`. Grouped
-  bubbles drop the tail (except the last), tighten spacing, and flatten the
-  tail-side corners (`BubbleClip` `flattenTop`/`flattenBottom`, radius
-  `GROUPED_RADIUS`). It reads each child's side from the component type
+  bubbles drop the tail (except the last), tighten spacing, and round the
+  tail-side connecting corners MORE (`BubbleClip` `flattenTop`/`flattenBottom`,
+  radius `GROUPED_RADIUS`, clamped to the bubble geometry). It reads each
+  child's side from the component type
   (`HeadingMessage`=outgoing, `TextMessage`/`MediaMessage`=incoming) or a
   `Message`'s `direction`. **Don't hand-set `tail`/`grouped`** — the thread
   derives them; messages must be DIRECT children of `MessageThread` for this to

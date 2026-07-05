@@ -8,8 +8,8 @@ import { TextMessage } from './TextMessage';
  * Grouped messages. `MessageThread` computes grouping from the sequence:
  * consecutive same-side messages form a run, and every message in a run drops
  * its tail EXCEPT the last (bottom) one. Grouped bubbles also tighten their
- * spacing and flatten the tail-side corners where they stack. Nothing is set
- * by hand — the thread derives it from the order.
+ * spacing and ROUND the tail-side corners more where they connect within a run.
+ * Nothing is set by hand — the thread derives it from the order.
  */
 const meta = {
     title: 'iMessage/Grouping',

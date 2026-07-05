@@ -26,8 +26,12 @@ const BEFORE_INSET = 13; // ::before left edge sits 13px inside the body edge
 const BEFORE_CORNER_RX = 16; // ::before bottom-inner corner (16px 14px)
 const BEFORE_CORNER_RY = 14;
 const AFTER_CORNER = 10; // ::after bottom-inner corner radius
-/** Reduced corner radius on the tail-side edge where messages stack in a group. */
-const GROUPED_RADIUS = 6;
+/**
+ * Corner radius on the tail-side edge where consecutive same-sender bubbles
+ * connect within a group — deliberately MORE rounded than the body so the
+ * connecting corners bulge (clamped to the bubble's geometry).
+ */
+const GROUPED_RADIUS = 40;
 
 type Corners = { tl: number; tr: number; br: number; bl: number };
 
@@ -126,16 +130,18 @@ export function BubbleClip({
 }: BubbleClipProps) {
     const bw = width - BUBBLE_TAIL_OUT;
     const r = Math.max(0, Math.min(BUBBLE_RADIUS, bw / 2, height / 2));
-    const flat = Math.min(GROUPED_RADIUS, r);
+    // Extra-round the corners where the bubble connects to a group neighbor,
+    // clamped to the bubble's own geometry.
+    const groupedR = Math.max(0, Math.min(GROUPED_RADIUS, bw / 2, height / 2));
     const mirror = direction === 'incoming';
     // Tail-side corners are the top/bottom-right (mirrored to the left for
-    // incoming). Flatten them where the bubble stacks; the bottom-right corner
-    // stays full when the tail is drawn (the hook owns it).
+    // incoming). Round them MORE where the bubble stacks; the bottom-right
+    // corner stays the body radius when the tail is drawn (the hook owns it).
     const corners: Corners = {
         tl: r,
         bl: r,
-        tr: flattenTop ? flat : r,
-        br: tail ? r : flattenBottom ? flat : r,
+        tr: flattenTop ? groupedR : r,
+        br: tail ? r : flattenBottom ? groupedR : r,
     };
     return (
         <clipPath id={id} clipPathUnits='userSpaceOnUse'>
