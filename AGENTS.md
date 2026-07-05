@@ -41,12 +41,40 @@ bubbles in iMessage blue (`--color-imessage-sent` `#075b97`) / grey
 - Slices in `src/slices/*` (RichText, Heading, Quote, CodeBlock, Images,
   Divider), registered in `src/slices/index.ts`. Quote renders as an incoming
   iMessage bubble.
-- Pages: `src/app/blog/page.tsx` (index — posts as an iMessage thread),
-  `src/app/blog/[uid]/page.tsx` (post, SSG via `generateStaticParams` +
-  `SliceZone`). Preview routes under `src/app/api/(exit-)preview`,
-  `src/app/slice-simulator` (must be `'use client'` — it passes a render fn).
-- Reusable bubble: `src/components/ChatBubble`. The original splash still uses
-  `src/components/Messages`.
+- Preview routes under `src/app/api/(exit-)preview`, `src/app/slice-simulator`
+  (must be `'use client'` — it passes a render fn).
+- Reusable bubble: `src/components/ChatBubble`. The original splash
+  (`src/components/Messages`) and the Prismic `SliceZone`/`getPost` machinery
+  still exist as components but are **not currently rendered by any route** —
+  see the global conversation below.
+
+## Global conversation (the whole site) — `src/components/conversation/`
+
+The entire site is ONE persistent iMessage conversation. **Route pages render
+`null`** (`/`, `/about`, `/blog`, `/blog/[uid]`); their content is derived from
+the URL and rendered by the layout instead. This is the current site shell —
+the old per-page rendering (splash, blog index list, post `SliceZone`) is
+bypassed.
+
+- `ConversationProvider` (in the ROOT layout, so it survives client nav) holds
+  `segments: {id, pathname}[]` and APPENDS one every time `usePathname()`
+  changes — never resets. Same-path revisits append too (the thread grows).
+- `ConversationView`/`ConversationThread` render each segment: an outgoing
+  "hey Scott" + the page's incoming content (`ConversationSegment` maps
+  pathname → content). New segments scroll into view (fade in via scroll
+  reveal). `ConversationThread` takes a `segments` prop so Storybook can drive
+  it (`Conversation/GlobalThread` stories).
+- Content sources: blog post bodies from **`src/lib/posts.ts`**
+  (`PLACEHOLDER_POSTS[].body` — placeholder RichTextField, rendered via
+  `richTextToMessages` exported from `ConversationText`); hardcoded
+  home/about/blog copy in `content.ts` (PLACEHOLDER — swap for real copy).
+  Recirc links at post bottoms reuse `PostLinkList`/`PostLinkBubble`.
+- `PostListComposer` lives in the layout too (global bottom compose bar); its
+  links + the recirc links use client `Link` nav → `usePathname` change →
+  append.
+- To wire real Prismic later: map `getAllPosts()` docs to `BlogPostLink`
+  (title/slug/body). The client conversation would need the post body available
+  client-side (e.g. seed via server props or an API route).
 - **`PostListComposer`** (`src/components/PostListComposer`) — a bottom-fixed
   iMessage compose bar (pill + send button) that pops up the blog-post list;
   each post heading is a link rendered as a darker translucent grey bubble in

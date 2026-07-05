@@ -16,7 +16,7 @@ import { TextMessage } from './TextMessage';
 /**
  * Serializers that render only a block's INLINE content (bold, italics, links)
  * as a fragment — the block wrapper (the bubble) is added separately in
- * {@link fieldToMessages}. This lets us treat each rich-text block as one
+ * {@link richTextToMessages}. This lets us treat each rich-text block as one
  * message element and pass the whole sequence to {@link MessageThread}, which
  * computes the grouping (tails) from the sequence.
  */
@@ -48,7 +48,7 @@ const renderInline = (node: NonNullable<Field>[number]) => (
  * everything else — paragraphs, lists, code, images, embeds — arrives
  * (incoming). Returns a flat list so {@link MessageThread} can group it.
  */
-function fieldToMessages(field: Field): ReactElement[] {
+export function richTextToMessages(field: Field): ReactElement[] {
     const nodes = Array.isArray(field) ? field : [];
     const messages: ReactElement[] = [];
 
@@ -133,7 +133,7 @@ type ConversationTextProps = {
 export const ConversationText = ({ field, className }: ConversationTextProps) => {
     return (
         <MessageThread className={className}>
-            {fieldToMessages(field)}
+            {richTextToMessages(field)}
         </MessageThread>
     );
 };

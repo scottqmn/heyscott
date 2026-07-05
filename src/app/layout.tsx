@@ -1,5 +1,10 @@
 import { PrismicPreview } from '@prismicio/next';
 import type { Metadata } from 'next';
+import {
+    ConversationProvider,
+    ConversationView,
+} from '@/components/conversation';
+import { PostListComposer } from '@/components/PostListComposer';
 import { repositoryName } from '@/prismicio';
 import './globals.css';
 
@@ -29,7 +34,18 @@ export default function RootLayout({
     return (
         <html lang='en'>
             <body className='min-h-screen bg-background font-sans text-xl font-light text-foreground'>
-                {children}
+                {/*
+                 * The whole site is one persistent iMessage conversation. The
+                 * provider + thread live here (above the route) so they survive
+                 * client navigation; each page appends its segment. Pages
+                 * themselves render nothing — their content is derived from the
+                 * URL in `ConversationView`.
+                 */}
+                <ConversationProvider>
+                    <ConversationView />
+                    {children}
+                    <PostListComposer />
+                </ConversationProvider>
                 <PrismicPreview repositoryName={repositoryName} />
             </body>
         </html>

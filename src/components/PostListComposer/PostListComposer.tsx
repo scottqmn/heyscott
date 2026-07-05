@@ -1,10 +1,9 @@
 'use client';
 
 import { clsx } from 'clsx';
-import Link from 'next/link';
 import { useState } from 'react';
-import { ChatBubble } from '@/components/ChatBubble';
 import { PLACEHOLDER_POSTS, type BlogPostLink } from '@/lib/posts';
+import { PostLinkList } from './PostLinkList';
 
 type PostListComposerProps = {
     /** Posts to link to. Defaults to the placeholder source (Prismic pending). */
@@ -14,30 +13,6 @@ type PostListComposerProps = {
     /** Start with the post list open (used by the Storybook example). */
     defaultOpen?: boolean;
 };
-
-/**
- * A single post link as a darker, translucent GREY bubble (the iMessage
- * typing-indicator tone) in the outgoing (right) position — distinct from an
- * incoming message.
- */
-const PostLinkBubble = ({
-    post,
-    tail,
-    grouped,
-}: {
-    post: BlogPostLink;
-    tail: boolean;
-    grouped: boolean;
-}) => (
-    <ChatBubble variant='sent' tone='typing' tail={tail} grouped={grouped}>
-        <Link
-            href={`/blog/${post.slug}`}
-            className='block font-medium transition-opacity hover:opacity-70'
-        >
-            {post.title}
-        </Link>
-    </ChatBubble>
-);
 
 /**
  * A bottom-anchored iMessage compose bar (rounded pill "input" + circular send
@@ -75,14 +50,7 @@ export const PostListComposer = ({
             >
                 <div className='mx-auto max-w-xl px-5 pt-5 pb-2'>
                     <div className='max-h-[58vh] overflow-y-auto pr-0.5'>
-                        {posts.map((post, i) => (
-                            <PostLinkBubble
-                                key={post.slug}
-                                post={post}
-                                tail={i === posts.length - 1}
-                                grouped={i > 0}
-                            />
-                        ))}
+                        <PostLinkList posts={posts} />
                     </div>
                 </div>
             </div>
