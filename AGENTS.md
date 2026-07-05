@@ -49,13 +49,15 @@ bubbles in iMessage blue (`--color-imessage-sent` `#075b97`) / grey
   `src/components/Messages`.
 - **`PostListComposer`** (`src/components/PostListComposer`) — a bottom-fixed
   iMessage compose bar (pill + send button) that pops up the blog-post list;
-  each post heading is a link rendered as a GREY bubble in the OUTGOING (right)
-  position (`ChatBubble variant='sent' tone='received'`). Wired into
-  `/blog`. Driven by **`src/lib/posts.ts`** (`PLACEHOLDER_POSTS` /
+  each post heading is a link rendered as a darker translucent grey bubble in
+  the OUTGOING (right) position (`ChatBubble variant='sent' tone='typing'`).
+  Wired into `/blog`. Driven by **`src/lib/posts.ts`** (`PLACEHOLDER_POSTS` /
   `BlogPostLink`) — the placeholder source while Prismic is unwired; the blog
   page passes real posts (mapped to `{title, slug}`) when they exist, else the
   placeholders. `tone` (on `ChatBubble`/`DynamicBubble`) decouples bubble COLOR
-  from `variant`/`direction` (position + tail side).
+  from `variant`/`direction` (position + tail side); `tone='typing'` is the
+  darker translucent gray (`--color-imessage-typing`, text via `--foreground`
+  so it's legible in both themes) — the iMessage typing-indicator tone.
 
 ## iMessage message-bubble component library (`src/components/imessage/`)
 

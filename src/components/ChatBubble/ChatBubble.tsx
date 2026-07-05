@@ -10,8 +10,11 @@ type ChatBubbleProps = {
     grouped?: boolean;
     /** Draw the tail (omitted for grouped messages that aren't the last). */
     tail?: boolean;
-    /** Override the bubble COLOR independently of `variant` (position). */
-    tone?: 'sent' | 'received';
+    /**
+     * Override the bubble COLOR independently of `variant` (position). `typing`
+     * is the darker translucent gray (iMessage typing-indicator tone).
+     */
+    tone?: 'sent' | 'received' | 'typing';
     className?: string;
 };
 
@@ -40,11 +43,11 @@ export const ChatBubble = ({
             <DynamicBubble
                 direction={variant === 'sent' ? 'outgoing' : 'incoming'}
                 tone={
-                    tone
-                        ? tone === 'sent'
-                            ? 'outgoing'
-                            : 'incoming'
-                        : undefined
+                    tone === 'sent'
+                        ? 'outgoing'
+                        : tone === 'received'
+                          ? 'incoming'
+                          : tone // 'typing' | undefined
                 }
                 tail={tail}
                 grouped={grouped}

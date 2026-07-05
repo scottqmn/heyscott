@@ -15,7 +15,11 @@ type PostListComposerProps = {
     defaultOpen?: boolean;
 };
 
-/** A single post link as a GREY bubble in the outgoing (right) position. */
+/**
+ * A single post link as a darker, translucent GREY bubble (the iMessage
+ * typing-indicator tone) in the outgoing (right) position — distinct from an
+ * incoming message.
+ */
 const PostLinkBubble = ({
     post,
     tail,
@@ -25,7 +29,7 @@ const PostLinkBubble = ({
     tail: boolean;
     grouped: boolean;
 }) => (
-    <ChatBubble variant='sent' tone='received' tail={tail} grouped={grouped}>
+    <ChatBubble variant='sent' tone='typing' tail={tail} grouped={grouped}>
         <Link
             href={`/blog/${post.slug}`}
             className='block font-medium transition-opacity hover:opacity-70'
@@ -38,9 +42,9 @@ const PostLinkBubble = ({
 /**
  * A bottom-anchored iMessage compose bar (rounded pill "input" + circular send
  * button). Tapping it pops up a list of blog-post links, each rendered as a
- * grey outgoing-positioned message bubble whose heading is the link — an
- * iMessage-flavored blog index. Driven by the placeholder post source until
- * Prismic is wired.
+ * darker translucent grey outgoing-positioned bubble (the typing-indicator
+ * tone) whose heading is the link — an iMessage-flavored blog index. Driven by
+ * the placeholder post source until Prismic is wired.
  */
 export const PostListComposer = ({
     posts = PLACEHOLDER_POSTS,

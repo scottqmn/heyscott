@@ -35,21 +35,26 @@ type DynamicBubbleProps = {
     /** A same-side message sits above (part of a group) — tightens the top. */
     grouped?: boolean;
     /**
-     * Override the bubble color independently of `direction`, e.g. a GREY bubble
-     * in the outgoing (right) position for post-link bubbles. Defaults to
-     * `direction`.
+     * Override the bubble color independently of `direction` (position/tail),
+     * e.g. the `typing` tone (darker translucent gray) for post-link bubbles in
+     * the outgoing position. Defaults to `direction`.
      */
-    tone?: BubbleDirection;
+    tone?: BubbleTone;
     className?: string;
 };
 
-const BG: Record<BubbleDirection, string> = {
+/** Color families a bubble can use. `typing` = the darker translucent gray. */
+export type BubbleTone = BubbleDirection | 'typing';
+
+const BG: Record<BubbleTone, string> = {
     outgoing: 'var(--color-imessage-sent)',
     incoming: 'var(--color-imessage-received)',
+    typing: 'var(--color-imessage-typing)',
 };
-const FG: Record<BubbleDirection, string> = {
+const FG: Record<BubbleTone, string> = {
     outgoing: 'var(--color-imessage-sent-foreground)',
     incoming: 'var(--color-imessage-received-foreground)',
+    typing: 'var(--color-imessage-typing-foreground)',
 };
 
 // Per-line rects of an element's text content (one rect per visual line).

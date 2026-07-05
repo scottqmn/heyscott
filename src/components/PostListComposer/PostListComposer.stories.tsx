@@ -4,8 +4,9 @@ import { PostListComposer } from './PostListComposer';
 /**
  * A bottom-anchored iMessage compose bar (rounded pill "input" + circular send
  * button). Tapping it pops up the blog-post list — each post's heading rendered
- * as a grey outgoing-positioned bubble that links to the post. Driven by the
- * placeholder post source while Prismic is unwired.
+ * as a darker, translucent grey outgoing-positioned bubble (the iMessage
+ * typing-indicator tone) that links to the post. Driven by the placeholder post
+ * source while Prismic is unwired.
  */
 const meta = {
     title: 'Blog/PostListComposer',
