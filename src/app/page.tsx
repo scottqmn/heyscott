@@ -1,9 +1,18 @@
-/**
- * The homepage renders nothing itself — the site is one continuous
- * conversation rendered by `ConversationView` in the root layout, which derives
- * each page's messages from the URL. This page just needs to exist as the `/`
- * route so navigation resolves.
- */
+import Link from 'next/link';
+import { Messages } from '@/components/Messages';
+
 export default function Home() {
-    return null;
+    return (
+        <main className='relative'>
+            <Messages />
+            <nav className='pb-10 text-center'>
+                <Link
+                    href='/blog'
+                    className='text-base text-muted-foreground underline-offset-4 hover:text-foreground hover:underline'
+                >
+                    read the blog →
+                </Link>
+            </nav>
+        </main>
+    );
 }
