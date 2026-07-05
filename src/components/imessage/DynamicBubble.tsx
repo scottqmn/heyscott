@@ -35,6 +35,13 @@ type DynamicBubbleProps = {
     /** A same-side message sits above (part of a group) — tightens the top. */
     grouped?: boolean;
     /**
+     * A same-side message sits BELOW — rounds the tail-side bottom corner into
+     * the group. Defaults to `!tail` (a normal run's non-last messages have no
+     * tail and do have a neighbor below). Set explicitly for always-tail-less
+     * stacks (e.g. post-link lists) so the last item's bottom stays full-round.
+     */
+    groupedBelow?: boolean;
+    /**
      * Override the bubble color independently of `direction` (position/tail),
      * e.g. the `typing` tone (darker translucent gray) for post-link bubbles in
      * the outgoing position. Defaults to `direction`.
@@ -163,6 +170,7 @@ export const DynamicBubble = ({
     variant = 'text',
     tail = true,
     grouped = false,
+    groupedBelow,
     tone,
     className,
 }: DynamicBubbleProps) => {
@@ -173,9 +181,14 @@ export const DynamicBubble = ({
     // Position/tail come from `direction`; color from `tone` (default direction).
     const colorSide = tone ?? direction;
 
-    // Grouped corners: flatten the tail-side top when a same-side message sits
-    // above (grouped), and the tail-side bottom when one sits below (no tail).
-    const clipProps = { tail, flattenTop: grouped, flattenBottom: !tail };
+    // Grouped corners: round the tail-side top when a same-side message sits
+    // above (grouped), and the tail-side bottom when one sits below
+    // (`groupedBelow`, defaulting to `!tail` for normal message runs).
+    const clipProps = {
+        tail,
+        flattenTop: grouped,
+        flattenBottom: groupedBelow ?? !tail,
+    };
 
     const applySize = (width: number, height: number) =>
         setSize((prev) =>

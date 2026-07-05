@@ -76,16 +76,20 @@ bypassed.
   (title/slug/body). The client conversation would need the post body available
   client-side (e.g. seed via server props or an API route).
 - **`PostListComposer`** (`src/components/PostListComposer`) — a bottom-fixed
-  iMessage compose bar (pill + send button) that pops up the blog-post list;
-  each post heading is a link rendered as a darker translucent grey bubble in
-  the OUTGOING (right) position (`ChatBubble variant='sent' tone='typing'`).
-  Wired into `/blog`. Driven by **`src/lib/posts.ts`** (`PLACEHOLDER_POSTS` /
-  `BlogPostLink`) — the placeholder source while Prismic is unwired; the blog
-  page passes real posts (mapped to `{title, slug}`) when they exist, else the
-  placeholders. `tone` (on `ChatBubble`/`DynamicBubble`) decouples bubble COLOR
-  from `variant`/`direction` (position + tail side); `tone='typing'` is the
-  darker translucent gray (`--color-imessage-typing`, text via `--foreground`
-  so it's legible in both themes) — the iMessage typing-indicator tone.
+  iMessage compose bar (pill + send button) that pops up the blog-post list.
+  `PostLinkList`/`PostLinkBubble` render each post heading as a link bubble:
+  darker translucent grey (`tone='typing'`) in the OUTGOING (right) position,
+  and **ALWAYS tail-less** (`tail={false}`, including the bottom item) so they
+  read as a list/menu, not sent messages — still grouped (tight spacing,
+  rounded connecting corners). Reused for the in-thread recirculation links.
+  Driven by **`src/lib/posts.ts`** (`PLACEHOLDER_POSTS` / `BlogPostLink`), the
+  placeholder source while Prismic is unwired.
+- Bubble color/corner knobs on `ChatBubble`/`DynamicBubble`: `tone` decouples
+  COLOR from `variant`/`direction` (`tone='typing'` = `--color-imessage-typing`,
+  darker translucent gray, text via `--foreground`, legible in both themes);
+  `groupedBelow` rounds the tail-side BOTTOM corner into the group independently
+  of the tail (defaults to `!tail`; set explicitly for always-tail-less stacks
+  so the last item's bottom stays full-round).
 
 ## iMessage message-bubble component library (`src/components/imessage/`)
 

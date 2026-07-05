@@ -5,18 +5,28 @@ import type { BlogPostLink } from '@/lib/posts';
 /**
  * A single post link as a darker, translucent grey bubble (the iMessage
  * typing-indicator tone) in the outgoing (right) position — distinct from an
- * incoming message.
+ * incoming message. Post-link bubbles are ALWAYS tail-less (they read as a
+ * list/menu, not sent messages); grouping only tightens spacing and rounds the
+ * connecting corners.
  */
 export const PostLinkBubble = ({
     post,
-    tail = true,
     grouped = false,
+    groupedBelow = false,
 }: {
     post: BlogPostLink;
-    tail?: boolean;
+    /** A link sits above (tightens the top, rounds the top connecting corner). */
     grouped?: boolean;
+    /** A link sits below (rounds the bottom connecting corner). */
+    groupedBelow?: boolean;
 }) => (
-    <ChatBubble variant='sent' tone='typing' tail={tail} grouped={grouped}>
+    <ChatBubble
+        variant='sent'
+        tone='typing'
+        tail={false}
+        grouped={grouped}
+        groupedBelow={groupedBelow}
+    >
         <Link
             href={`/blog/${post.slug}`}
             className='block font-medium transition-opacity hover:opacity-70'
@@ -27,8 +37,10 @@ export const PostLinkBubble = ({
 );
 
 /**
- * A grouped stack of post-link bubbles — only the bottom one keeps its tail.
- * Shared by the compose-bar sheet and the in-thread recirculation links.
+ * A grouped, ALWAYS tail-less stack of post-link bubbles — tight spacing and
+ * flattened connecting corners (round on the outer edges), reading as a menu
+ * of links rather than sent messages. Shared by the compose-bar sheet and the
+ * in-thread recirculation links.
  */
 export const PostLinkList = ({ posts }: { posts: BlogPostLink[] }) => (
     <>
@@ -36,8 +48,8 @@ export const PostLinkList = ({ posts }: { posts: BlogPostLink[] }) => (
             <PostLinkBubble
                 key={post.slug}
                 post={post}
-                tail={i === posts.length - 1}
                 grouped={i > 0}
+                groupedBelow={i < posts.length - 1}
             />
         ))}
     </>

@@ -10,6 +10,8 @@ type ChatBubbleProps = {
     grouped?: boolean;
     /** Draw the tail (omitted for grouped messages that aren't the last). */
     tail?: boolean;
+    /** A same-side bubble sits below — rounds the tail-side bottom corner in. */
+    groupedBelow?: boolean;
     /**
      * Override the bubble COLOR independently of `variant` (position). `typing`
      * is the darker translucent gray (iMessage typing-indicator tone).
@@ -29,6 +31,7 @@ export const ChatBubble = ({
     variant = 'received',
     grouped = false,
     tail = true,
+    groupedBelow,
     tone,
     className,
 }: ChatBubbleProps) => {
@@ -51,6 +54,7 @@ export const ChatBubble = ({
                 }
                 tail={tail}
                 grouped={grouped}
+                groupedBelow={groupedBelow}
                 className={clsx('max-w-[85%]', className)}
             >
                 {children}
