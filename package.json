@@ -3,6 +3,12 @@
     "version": "0.1.0",
     "private": true,
     "packageManager": "pnpm@10.33.0",
+    "browserslist": [
+        "last 2 versions",
+        "not dead",
+        "iOS >= 15.4",
+        "Safari >= 15.4"
+    ],
     "pnpm": {
         "onlyBuiltDependencies": [
             "@parcel/watcher",
@@ -12,8 +18,8 @@
         ]
     },
     "scripts": {
-        "dev": "next dev",
-        "build": "next build",
+        "dev": "next dev --webpack",
+        "build": "next build --webpack",
         "start": "next start",
         "lint": "eslint .",
         "slicemachine": "start-slicemachine",
@@ -26,7 +32,6 @@
         "@prismicio/next": "^2.2.4",
         "@prismicio/react": "^3.4.1",
         "clsx": "^2.1.1",
-        "framer-motion": "^12.23.12",
         "next": "^16.2.3",
         "prismjs": "^1.30.0",
         "react": "^19.2.0",

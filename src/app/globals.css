@@ -107,6 +107,44 @@
     animation-timing-function: ease-in-out;
 }
 
+/*
+ * Homepage splash: staggered iMessage bubble entrance. Deliberately PURE CSS so
+ * the bubbles are present and VISIBLE from the server-rendered HTML with zero
+ * client JS — the fade/slide-in is progressive enhancement layered on top. (The
+ * splash used framer-motion, which shipped every bubble at opacity:0 until JS
+ * ran, so the page was blank whenever client JS failed to run — e.g. on older
+ * iOS Safari.) The per-bubble stagger is set inline via `animation-delay`.
+ */
+@keyframes splashIn {
+    from {
+        opacity: 0;
+        transform: translateY(25px) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.splash-message {
+    /* `both` fill: shows the hidden `from` state during the delay, then holds
+       the visible `to` state. Where CSS animations are unsupported the element
+       simply keeps its default opacity (1) — visible, just not animated. */
+    animation: splashIn 0.5s ease-in-out both;
+}
+.splash-message--sent {
+    transform-origin: 100% 0;
+}
+.splash-message--received {
+    transform-origin: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .splash-message {
+        animation: none;
+    }
+}
+
 /* Blog reading column — typography plugin tuned to the site palette. */
 .prose {
     --tw-prose-body: var(--foreground);

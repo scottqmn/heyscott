@@ -3,7 +3,8 @@ import { Messages } from './Messages';
 
 /**
  * The homepage splash: the original iMessage conversation that is heyscott's
- * identity, animated in with framer-motion.
+ * identity. Server-rendered, staggered in with a pure-CSS animation (visible
+ * even without client JS).
  */
 const meta = {
     title: 'Primitives/Messages (splash)',
