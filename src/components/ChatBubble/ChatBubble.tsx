@@ -10,19 +10,23 @@ type ChatBubbleProps = {
     grouped?: boolean;
     /** Draw the tail (omitted for grouped messages that aren't the last). */
     tail?: boolean;
+    /** Override the bubble COLOR independently of `variant` (position). */
+    tone?: 'sent' | 'received';
     className?: string;
 };
 
 /**
  * The iMessage chat bubble. Renders through {@link DynamicBubble}, so the
  * bubble body + tail are one dynamic SVG shape (shared with masked media),
- * colored from the theme's `--color-imessage-*` tokens.
+ * colored from the theme's `--color-imessage-*` tokens. `tone` can decouple the
+ * color from `variant` — e.g. a grey bubble in the sent (right) position.
  */
 export const ChatBubble = ({
     children,
     variant = 'received',
     grouped = false,
     tail = true,
+    tone,
     className,
 }: ChatBubbleProps) => {
     return (
@@ -35,6 +39,13 @@ export const ChatBubble = ({
         >
             <DynamicBubble
                 direction={variant === 'sent' ? 'outgoing' : 'incoming'}
+                tone={
+                    tone
+                        ? tone === 'sent'
+                            ? 'outgoing'
+                            : 'incoming'
+                        : undefined
+                }
                 tail={tail}
                 grouped={grouped}
                 className={clsx('max-w-[85%]', className)}

@@ -2,6 +2,7 @@ import { asText } from '@prismicio/client';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChatBubble } from '@/components/ChatBubble';
+import { PostListComposer } from '@/components/PostListComposer';
 import { getAllPosts } from '@/lib/prismic/queries';
 import { formatPostDate } from '@/lib/date';
 
@@ -13,8 +14,18 @@ export const metadata: Metadata = {
 export default async function BlogIndex() {
     const posts = await getAllPosts();
 
+    // Map real posts to link shape; the composer falls back to placeholders
+    // (Prismic pending) when there are none.
+    const postLinks = posts
+        .filter((post) => Boolean(post.uid))
+        .map((post) => ({
+            title: asText(post.data.title) || 'Untitled',
+            slug: post.uid!,
+        }));
+
     return (
-        <main className='mx-auto flex min-h-screen max-w-lg flex-col px-5 py-10'>
+        <>
+        <main className='mx-auto flex min-h-screen max-w-lg flex-col px-5 py-10 pb-28'>
             <header className='mb-6 text-center'>
                 <Link
                     href='/'
@@ -69,5 +80,7 @@ export default async function BlogIndex() {
                 )}
             </div>
         </main>
+        <PostListComposer posts={postLinks.length > 0 ? postLinks : undefined} />
+        </>
     );
 }

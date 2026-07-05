@@ -47,6 +47,15 @@ bubbles in iMessage blue (`--color-imessage-sent` `#075b97`) / grey
   `src/app/slice-simulator` (must be `'use client'` — it passes a render fn).
 - Reusable bubble: `src/components/ChatBubble`. The original splash still uses
   `src/components/Messages`.
+- **`PostListComposer`** (`src/components/PostListComposer`) — a bottom-fixed
+  iMessage compose bar (pill + send button) that pops up the blog-post list;
+  each post heading is a link rendered as a GREY bubble in the OUTGOING (right)
+  position (`ChatBubble variant='sent' tone='received'`). Wired into
+  `/blog`. Driven by **`src/lib/posts.ts`** (`PLACEHOLDER_POSTS` /
+  `BlogPostLink`) — the placeholder source while Prismic is unwired; the blog
+  page passes real posts (mapped to `{title, slug}`) when they exist, else the
+  placeholders. `tone` (on `ChatBubble`/`DynamicBubble`) decouples bubble COLOR
+  from `variant`/`direction` (position + tail side).
 
 ## iMessage message-bubble component library (`src/components/imessage/`)
 

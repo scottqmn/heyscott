@@ -34,6 +34,12 @@ type DynamicBubbleProps = {
     tail?: boolean;
     /** A same-side message sits above (part of a group) — tightens the top. */
     grouped?: boolean;
+    /**
+     * Override the bubble color independently of `direction`, e.g. a GREY bubble
+     * in the outgoing (right) position for post-link bubbles. Defaults to
+     * `direction`.
+     */
+    tone?: BubbleDirection;
     className?: string;
 };
 
@@ -152,12 +158,15 @@ export const DynamicBubble = ({
     variant = 'text',
     tail = true,
     grouped = false,
+    tone,
     className,
 }: DynamicBubbleProps) => {
     const outerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });
     const clipId = useId().replace(/:/g, '');
+    // Position/tail come from `direction`; color from `tone` (default direction).
+    const colorSide = tone ?? direction;
 
     // Grouped corners: flatten the tail-side top when a same-side message sits
     // above (grouped), and the tail-side bottom when one sits below (no tail).
@@ -273,7 +282,7 @@ export const DynamicBubble = ({
         <div
             ref={outerRef}
             className={clsx('relative inline-block max-w-full', className)}
-            style={{ color: FG[direction], boxSizing: 'border-box', ...tailPad }}
+            style={{ color: FG[colorSide], boxSizing: 'border-box', ...tailPad }}
         >
             {ready && (
                 <svg
@@ -295,7 +304,7 @@ export const DynamicBubble = ({
                     <rect
                         width={size.width}
                         height={size.height}
-                        fill={BG[direction]}
+                        fill={BG[colorSide]}
                         clipPath={`url(#${clipId})`}
                     />
                 </svg>
@@ -306,7 +315,7 @@ export const DynamicBubble = ({
                 style={{
                     // The clipped SVG rect is the bubble once measured; before
                     // that a plain rounded rect stands in so there's no flash.
-                    backgroundColor: ready ? 'transparent' : BG[direction],
+                    backgroundColor: ready ? 'transparent' : BG[colorSide],
                     borderRadius: ready ? undefined : BUBBLE_RADIUS,
                 }}
             >
