@@ -4,8 +4,8 @@ import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
 import { ChatBubble } from '@/components/ChatBubble';
 import { ReadReceipt, type ReceiptStatus } from './assets/ReadReceipt';
-import { FOCUSED_OPACITY, UNFOCUSED_OPACITY } from './constants';
-import { useInViewFocus } from './useInViewFocus';
+import { HIDDEN_OPACITY, REVEALED_OPACITY } from './constants';
+import { useScrollReveal } from './useScrollReveal';
 
 export type MessageDirection = 'incoming' | 'outgoing';
 
@@ -17,32 +17,32 @@ export type MessageProps = {
     grouped?: boolean;
     /** Delivered/read status, shown under outgoing messages only. */
     receipt?: ReceiptStatus | null;
-    /** Dim to {@link UNFOCUSED_OPACITY} when scrolled out of the focus band. */
-    focusOnScroll?: boolean;
+    /** Fade in from {@link HIDDEN_OPACITY} the first time it scrolls into view. */
+    revealOnScroll?: boolean;
     className?: string;
 };
 
 /**
  * A single iMessage-style message: the {@link ChatBubble} primitive (colors +
- * tail from the theme) wrapped with the scroll focus/unfocus effect and an
- * optional read receipt. The base building block of the message library.
+ * tail from the theme) wrapped with the one-way scroll reveal and an optional
+ * read receipt. The base building block of the message library.
  */
 export const Message = ({
     children,
     direction = 'incoming',
     grouped = false,
     receipt = null,
-    focusOnScroll = true,
+    revealOnScroll = true,
     className,
 }: MessageProps) => {
-    const { ref, inView } = useInViewFocus<HTMLDivElement>();
-    const dimmed = focusOnScroll && !inView;
+    const { ref, revealed } = useScrollReveal<HTMLDivElement>();
+    const shown = revealed || !revealOnScroll;
 
     return (
         <div
             ref={ref}
-            className={clsx('transition-opacity duration-500 ease-out')}
-            style={{ opacity: dimmed ? UNFOCUSED_OPACITY : FOCUSED_OPACITY }}
+            className={clsx('transition-opacity duration-700 ease-out')}
+            style={{ opacity: shown ? REVEALED_OPACITY : HIDDEN_OPACITY }}
         >
             <ChatBubble
                 variant={direction === 'outgoing' ? 'sent' : 'received'}

@@ -1,15 +1,16 @@
 /**
- * Opacity applied to messages that are scrolled out of the focus zone.
- * Tunable — bump toward 1 for a subtler effect, toward 0 for a stronger one.
+ * Opacity a message starts at, before it has scrolled into view. It fades from
+ * here up to full opacity as it's revealed. Tunable — toward 1 for a subtler
+ * reveal, toward 0 for a stronger one.
  */
-export const UNFOCUSED_OPACITY = 0.6;
+export const HIDDEN_OPACITY = 0.25;
 
-/** Opacity of the message currently in the focus zone. */
-export const FOCUSED_OPACITY = 1;
+/** Opacity of a message once it has been revealed. */
+export const REVEALED_OPACITY = 1;
 
 /**
- * IntersectionObserver rootMargin that shrinks the viewport to a horizontal
- * band through its vertical center, so the "focused" message is roughly the
- * one the reader is looking at rather than anything merely on screen.
+ * IntersectionObserver rootMargin for the reveal trigger. The negative bottom
+ * margin reveals a message a little after it enters from the bottom, so the
+ * fade-in reads as it scrolls up into view.
  */
-export const FOCUS_ROOT_MARGIN = '-40% 0px -40% 0px';
+export const REVEAL_ROOT_MARGIN = '0px 0px -10% 0px';

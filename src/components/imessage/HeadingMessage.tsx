@@ -6,17 +6,16 @@ type HeadingMessageProps = Omit<MessageProps, 'direction' | 'children'> & {
 };
 
 /**
- * A heading rendered as an INCOMING iMessage bubble (grey, left-aligned) —
- * the conversation's prompts/section titles arriving from the other side.
- * Uses the same body text style as {@link TextMessage}; only the incoming
- * bubble treatment sets it apart.
+ * A heading rendered as an OUTGOING iMessage bubble (blue, right-aligned) —
+ * the conversation's section titles being sent. Uses the same body text style
+ * as {@link TextMessage}; only the outgoing bubble treatment sets it apart.
  */
 export const HeadingMessage = ({
     children,
     ...rest
 }: HeadingMessageProps) => {
     return (
-        <Message direction='incoming' {...rest}>
+        <Message direction='outgoing' {...rest}>
             {children}
         </Message>
     );

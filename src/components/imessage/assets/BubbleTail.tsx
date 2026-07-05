@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { BubbleMask, type BubbleDirection } from '../bubbleShape';
+import { BubbleClip, type BubbleDirection } from '../bubbleShape';
 
 type BubbleTailProps = {
     direction: BubbleDirection;
@@ -11,7 +11,7 @@ const H = 54;
 
 /**
  * A small standalone bubble showing the tail chrome, drawn from the shared
- * {@link BubbleMask} so it's identical to real bubbles. Fill follows
+ * {@link BubbleClip} so it's identical to real bubbles. Fill follows
  * `currentColor`; set a text-color class to tint it.
  */
 export const BubbleTail = ({ direction, className }: BubbleTailProps) => {
@@ -26,9 +26,14 @@ export const BubbleTail = ({ direction, className }: BubbleTailProps) => {
             focusable='false'
         >
             <defs>
-                <BubbleMask id={id} width={W} height={H} direction={direction} />
+                <BubbleClip id={id} width={W} height={H} direction={direction} />
             </defs>
-            <rect width={W} height={H} fill='currentColor' mask={`url(#${id})`} />
+            <rect
+                width={W}
+                height={H}
+                fill='currentColor'
+                clipPath={`url(#${id})`}
+            />
         </svg>
     );
 };

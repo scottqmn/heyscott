@@ -10,7 +10,7 @@ import {
     type ReactNode,
 } from 'react';
 import {
-    BubbleMask,
+    BubbleClip,
     BUBBLE_RADIUS,
     BUBBLE_TAIL_OUT,
     type BubbleDirection,
@@ -42,35 +42,102 @@ const FG: Record<BubbleDirection, string> = {
     incoming: 'var(--color-imessage-received-foreground)',
 };
 
-/**
- * Measures the widest line the content actually wraps to and returns the
- * minimal content-box width that hugs it. An `inline-block` + `max-width` box
- * doesn't shrink to the widest wrapped line (CSS shrink-to-fit keeps the full
- * `max-width` once text wraps, leaving trailing whitespace); measuring the
- * rendered line rects and pinning the width to the widest one removes that
- * slack so the bubble hugs its text. Returns `null` if it can't measure.
- */
-function measureHugWidth(content: HTMLElement): number | null {
-    if (typeof document === 'undefined' || !document.createRange) return null;
+// Per-line rects of an element's text content (one rect per visual line).
+function lineRects(content: HTMLElement): DOMRect[] {
     const range = document.createRange();
     range.selectNodeContents(content);
-    const rects = range.getClientRects();
-    let widest = 0;
-    for (let i = 0; i < rects.length; i++) {
-        widest = Math.max(widest, rects[i].width);
-    }
+    const rects = Array.from(range.getClientRects());
     if (typeof range.detach === 'function') range.detach();
-    if (widest <= 0) return null;
+    return rects;
+}
+
+function lineCount(content: HTMLElement): number {
+    const tops = new Set<number>();
+    for (const r of lineRects(content)) tops.add(Math.round(r.top));
+    return tops.size || 1;
+}
+
+function widestLine(content: HTMLElement): number {
+    let widest = 0;
+    for (const r of lineRects(content)) widest = Math.max(widest, r.width);
+    return widest;
+}
+
+/** Fraction of the surrounding column a bubble may occupy at its widest. */
+const MAX_WIDTH_FRACTION = 0.85;
+
+/**
+ * Computes the tightest content-box width for a text bubble and returns it, or
+ * `null` if it can't measure. Two problems to solve:
+ *
+ *  1. An `inline-block` + `max-width` box doesn't shrink to the widest wrapped
+ *     line (CSS shrink-to-fit keeps the full `max-width` once text wraps). And
+ *     a *percentage* max-width on a flex item can resolve against an indefinite
+ *     basis and be ignored — so we cap the width explicitly here in JS.
+ *  2. Greedy line-breaking fills early lines and leaves a short last line, so
+ *     hugging the widest line still leaves a wide box with lots of whitespace.
+ *
+ * So for multi-line text we binary-search the SMALLEST width that still wraps
+ * to the same (minimal) number of lines — this balances the lines and shrinks
+ * the box as far as it can go without adding a line. `setWidth(w)` sets the
+ * content-box width via the outer element (which carries the tail padding).
+ */
+function measureHugWidth(
+    outer: HTMLElement,
+    content: HTMLElement,
+    setWidth: (contentWidth: number) => void
+): number | null {
+    if (typeof document === 'undefined' || !document.createRange) return null;
+
     const cs = getComputedStyle(content);
     const padX =
         parseFloat(cs.paddingLeft || '0') + parseFloat(cs.paddingRight || '0');
-    // +1px slack absorbs sub-pixel rounding so the widest line never re-wraps.
-    return Math.ceil(widest + padX) + 1;
+
+    // The widest the bubble may be: a fraction of the surrounding column,
+    // computed explicitly so a flaky percentage max-width can't let it overflow.
+    const parentW = outer.parentElement?.offsetWidth ?? 0;
+    const maxBoxW =
+        parentW > 0
+            ? Math.max(
+                  0,
+                  Math.floor(parentW * MAX_WIDTH_FRACTION) - BUBBLE_TAIL_OUT
+              )
+            : null;
+    if (!maxBoxW) return null;
+
+    // Wrap at the cap, then read the line count there (the minimum).
+    setWidth(maxBoxW);
+    const naturalLines = lineCount(content);
+
+    if (naturalLines <= 1) {
+        const w = widestLine(content);
+        return w > 0 ? Math.min(Math.ceil(w + padX) + 1, maxBoxW) : null;
+    }
+
+    // Longest unbreakable run — the floor for the search.
+    outer.style.width = 'min-content';
+    const minBoxW = Math.min(content.offsetWidth, maxBoxW);
+
+    // Smallest content-box width that keeps `naturalLines` lines.
+    let lo = minBoxW;
+    let hi = maxBoxW;
+    let best = maxBoxW;
+    for (let i = 0; i < 24 && hi - lo > 1; i++) {
+        const mid = Math.floor((lo + hi) / 2);
+        setWidth(mid);
+        if (lineCount(content) <= naturalLines) {
+            best = mid;
+            hi = mid;
+        } else {
+            lo = mid;
+        }
+    }
+    return best;
 }
 
 /**
  * The unified iMessage bubble: the original tail silhouette (from
- * {@link BubbleMask}) that adapts to its content and to incoming/outgoing. For
+ * {@link BubbleClip}) that adapts to its content and to incoming/outgoing. For
  * text it hugs the minimum width needed for the wrapped content (see
  * {@link measureHugWidth}); a ResizeObserver keeps it in sync as the container
  * resizes.
@@ -84,7 +151,7 @@ export const DynamicBubble = ({
     const outerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });
-    const maskId = useId().replace(/:/g, '');
+    const clipId = useId().replace(/:/g, '');
 
     const applySize = (width: number, height: number) =>
         setSize((prev) =>
@@ -112,12 +179,16 @@ export const DynamicBubble = ({
         const content = contentRef.current;
         if (!outer || !content) return;
 
+        const setWidth = (contentWidth: number) => {
+            outer.style.width = `${contentWidth + BUBBLE_TAIL_OUT}px`;
+        };
+
         const measure = () => {
-            // Release any pinned width so the content re-wraps at its max-width…
-            outer.style.width = '';
-            const hug = measureHugWidth(content);
-            // …then pin the outer to the hugging width (+ the tail-side room).
-            if (hug != null) outer.style.width = `${hug + BUBBLE_TAIL_OUT}px`;
+            const hug = measureHugWidth(outer, content, setWidth);
+            // Pin the outer to the hugging width (+ the tail-side room), or
+            // release it if we couldn't measure.
+            if (hug != null) setWidth(hug);
+            else outer.style.width = '';
             applySize(outer.offsetWidth, outer.offsetHeight);
         };
 
@@ -147,7 +218,7 @@ export const DynamicBubble = ({
     const ready = size.width > 0 && size.height > 0;
 
     if (variant === 'media') {
-        const maskUrl = ready ? `url(#${maskId})` : undefined;
+        const clipUrl = ready ? `url(#${clipId})` : undefined;
         return (
             <div className={clsx('relative block w-full', className)}>
                 {ready && (
@@ -156,8 +227,8 @@ export const DynamicBubble = ({
                         aria-hidden
                     >
                         <defs>
-                            <BubbleMask
-                                id={maskId}
+                            <BubbleClip
+                                id={clipId}
                                 width={size.width}
                                 height={size.height}
                                 direction={direction}
@@ -169,8 +240,8 @@ export const DynamicBubble = ({
                     ref={contentRef}
                     className='block w-full overflow-hidden [&_img]:block [&_img]:w-full'
                     style={{
-                        mask: maskUrl,
-                        WebkitMask: maskUrl,
+                        clipPath: clipUrl,
+                        WebkitClipPath: clipUrl,
                         borderRadius: ready ? undefined : BUBBLE_RADIUS,
                     }}
                 >
@@ -202,8 +273,8 @@ export const DynamicBubble = ({
                     aria-hidden
                 >
                     <defs>
-                        <BubbleMask
-                            id={maskId}
+                        <BubbleClip
+                            id={clipId}
                             width={size.width}
                             height={size.height}
                             direction={direction}
@@ -213,19 +284,18 @@ export const DynamicBubble = ({
                         width={size.width}
                         height={size.height}
                         fill={BG[direction]}
-                        mask={`url(#${maskId})`}
+                        clipPath={`url(#${clipId})`}
                     />
                 </svg>
             )}
             <div
                 ref={contentRef}
-                className='relative px-5 py-3 break-words'
+                className='relative px-5 py-3 text-base break-words md:text-xl'
                 style={{
-                    // The SVG mask is the bubble once measured; before that a
-                    // plain rounded rect stands in so there's no flash.
+                    // The clipped SVG rect is the bubble once measured; before
+                    // that a plain rounded rect stands in so there's no flash.
                     backgroundColor: ready ? 'transparent' : BG[direction],
                     borderRadius: ready ? undefined : BUBBLE_RADIUS,
-                    textWrap: 'pretty',
                 }}
             >
                 {children}

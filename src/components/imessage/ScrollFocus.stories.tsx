@@ -1,22 +1,22 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { UNFOCUSED_OPACITY } from './constants';
+import { HIDDEN_OPACITY } from './constants';
 import { HeadingMessage } from './HeadingMessage';
 import { MessageThread } from './MessageThread';
 import { TextMessage } from './TextMessage';
 
 /**
- * The scroll focus/unfocus effect. As you scroll the thread, messages inside
- * the viewport's center focus band stay at full opacity; those outside dim to
- * `UNFOCUSED_OPACITY` (0.6). Scroll the preview to see it — the message near
- * the vertical center is the focused one.
+ * The one-way scroll reveal. Messages start faded (`HIDDEN_OPACITY` ≈ 0.25) and
+ * fade IN as they scroll into view — then STAY at full opacity (they don't fade
+ * back out when scrolled past). Scroll the preview down to reveal them; scroll
+ * back up and they remain revealed.
  */
 const meta = {
-    title: 'iMessage/ScrollFocus',
+    title: 'iMessage/ScrollReveal',
     parameters: {
         layout: 'fullscreen',
         docs: {
             description: {
-                component: `Unfocused messages dim to ${UNFOCUSED_OPACITY}; the in-view message stays at full opacity. Scroll to see the effect.`,
+                component: `Messages start at ${HIDDEN_OPACITY} opacity and fade to full opacity the first time they enter view, then stay revealed.`,
             },
         },
     },
@@ -27,24 +27,24 @@ type Story = StoryObj<typeof meta>;
 
 const LINES = [
     'Scroll down slowly…',
-    'Watch the messages off-center fade',
-    'The one near the middle stays sharp',
-    'This is the focus band at work',
+    'Each message starts faded',
+    'and fades in as it enters view',
+    'This one just revealed',
     'Powered by IntersectionObserver',
-    'Opacity eases between 1 and 0.6',
+    'Opacity eases 0.25 → 1',
     'Keep going…',
     'Almost there',
-    'The effect is per-message',
-    'Each observes its own position',
-    'No scroll listeners, no jank',
+    'Once revealed, it stays revealed',
+    'Scroll back up to check',
+    'They never fade back out',
     'You reached the end 🎉',
 ];
 
 export const Demo: Story = {
     render: () => (
-        <div className='py-[45vh]'>
+        <div className='py-[60vh]'>
             <MessageThread>
-                <HeadingMessage>Scroll focus demo</HeadingMessage>
+                <HeadingMessage>Scroll reveal demo</HeadingMessage>
                 {LINES.map((line, i) => (
                     <TextMessage key={line} grouped={i > 0}>
                         {line}

@@ -1,11 +1,14 @@
 import { PrismicNextImage } from '@prismicio/next';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { MediaMessage } from './MediaMessage';
-import { mockImage, mockTallImage } from './mocks';
+import { MOCK_YOUTUBE_EMBED, mockImage, mockTallImage } from './mocks';
 
 /**
- * Images and embeds render as OUTGOING attachments (right-aligned, blue SVG
- * tail) so media flows in the conversation like a sent photo or video.
+ * Images and embeds render as INCOMING attachments (grey side, tail
+ * bottom-left). The media fills the bubble edge-to-edge and is clipped to the
+ * speech-bubble silhouette — tail included — so it takes the exact bubble
+ * shape. Real placeholders (seeded picsum.photos / a YouTube embed) show the
+ * mask against actual content.
  */
 const meta = {
     title: 'iMessage/MediaMessage',
@@ -18,7 +21,7 @@ const meta = {
             </div>
         ),
     ],
-    args: { focusOnScroll: false },
+    args: { revealOnScroll: false },
 } satisfies Meta<typeof MediaMessage>;
 
 export default meta;
@@ -26,22 +29,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Image: Story = {
     args: {
-        caption: 'photo.jpg',
+        caption: 'landscape.jpg',
         children: <PrismicNextImage field={mockImage} className='h-auto w-full' />,
     },
 };
 
-export const ImageWithReceipt: Story = {
-    args: {
-        receipt: 'read',
-        children: <PrismicNextImage field={mockImage} className='h-auto w-full' />,
-    },
-};
-
-/** A portrait image — the mask scales to a tall bubble, tail still masked. */
+/** A portrait image — the mask scales to a tall bubble, tail still clipped. */
 export const TallImage: Story = {
     args: {
-        caption: 'tall.jpg',
+        caption: 'portrait.jpg',
         children: (
             <PrismicNextImage field={mockTallImage} className='h-auto w-full' />
         ),
@@ -53,9 +49,10 @@ export const Embed: Story = {
         children: (
             <div className='[&_iframe]:block [&_iframe]:aspect-video [&_iframe]:w-full'>
                 <iframe
-                    title='Embedded video'
-                    // Self-contained (no network) so the story renders offline.
-                    srcDoc="<div style='display:grid;place-items:center;height:100%;background:#111;color:#fff;font-family:sans-serif;font-size:20px'>▶ Embedded video</div>"
+                    title='YouTube video'
+                    src={MOCK_YOUTUBE_EMBED}
+                    allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+                    allowFullScreen
                 />
             </div>
         ),

@@ -53,9 +53,7 @@ export const Manual: Story = {
                         className='h-auto w-full'
                     />
                 </MediaMessage>
-                <TextMessage receipt='read'>
-                    And it all renders as a conversation.
-                </TextMessage>
+                <TextMessage>And it all renders as a conversation.</TextMessage>
             </MessageThread>
         </div>
     ),

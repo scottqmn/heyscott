@@ -6,12 +6,12 @@ type TextMessageProps = Omit<MessageProps, 'direction' | 'children'> & {
 };
 
 /**
- * A block of body text rendered as an OUTGOING iMessage bubble (blue,
- * right-aligned) — the conversation's replies being sent.
+ * A block of body text rendered as an INCOMING iMessage bubble (grey,
+ * left-aligned) — the conversation's body content arriving.
  */
 export const TextMessage = ({ children, ...rest }: TextMessageProps) => {
     return (
-        <Message direction='outgoing' {...rest}>
+        <Message direction='incoming' {...rest}>
             {children}
         </Message>
     );

@@ -1,46 +1,31 @@
 import type { FilledImageFieldImage, RichTextField } from '@prismicio/client';
 
 /**
- * Self-contained mock content for Storybook stories — a data-URI SVG stands in
- * for a real photo so stories render identically offline and in CI (no network,
- * no live Prismic repo).
+ * Mock content for Storybook stories. Images use seeded picsum.photos URLs so
+ * they're real photos yet stable across reloads (the `/seed/<name>` keeps the
+ * same image each time).
  */
-const PLACEHOLDER_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'>
-  <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-    <stop offset='0' stop-color='%23075b97'/><stop offset='1' stop-color='%234aa3df'/>
-  </linearGradient></defs>
-  <rect width='800' height='600' fill='url(%23g)'/>
-  <text x='400' y='310' font-family='sans-serif' font-size='48' fill='white' text-anchor='middle'>photo.jpg</text>
-</svg>`;
-
-const PLACEHOLDER_URL = `data:image/svg+xml;utf8,${PLACEHOLDER_SVG.replace(/\n\s*/g, '')}`;
-
 export const mockImage: FilledImageFieldImage = {
     id: 'mock-image',
-    url: PLACEHOLDER_URL,
-    alt: 'A placeholder attachment',
+    url: 'https://picsum.photos/seed/heyscott-photo/900/600',
+    alt: 'A landscape attachment',
     copyright: null,
-    dimensions: { width: 800, height: 600 },
+    dimensions: { width: 900, height: 600 },
     edit: { x: 0, y: 0, zoom: 1, background: 'transparent' },
 };
-
-const TALL_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='640' height='1040'>
-  <defs><linearGradient id='t' x1='0' y1='0' x2='0' y2='1'>
-    <stop offset='0' stop-color='%234aa3df'/><stop offset='1' stop-color='%23075b97'/>
-  </linearGradient></defs>
-  <rect width='640' height='1040' fill='url(%23t)'/>
-  <text x='320' y='530' font-family='sans-serif' font-size='44' fill='white' text-anchor='middle'>tall.jpg</text>
-</svg>`;
 
 /** A portrait attachment, to show the mask scaling to a tall bubble. */
 export const mockTallImage: FilledImageFieldImage = {
     id: 'mock-tall-image',
-    url: `data:image/svg+xml;utf8,${TALL_SVG.replace(/\n\s*/g, '')}`,
-    alt: 'A tall placeholder attachment',
+    url: 'https://picsum.photos/seed/heyscott-tall/640/1040',
+    alt: 'A tall portrait attachment',
     copyright: null,
     dimensions: { width: 640, height: 1040 },
     edit: { x: 0, y: 0, zoom: 1, background: 'transparent' },
 };
+
+/** A real YouTube embed URL for the embed placeholder story. */
+export const MOCK_YOUTUBE_EMBED = 'https://www.youtube.com/embed/aqz-KE-bpKQ';
 
 /** Short / medium content, to show the bubble hugging across content lengths. */
 export const SHORT_TEXT = 'On it 👍';
@@ -57,7 +42,7 @@ export const LOREM =
     'occaecat cupidatat non proident, sunt in culpa qui officia deserunt ' +
     'mollit anim id est laborum.';
 
-/** A short conversation: headings (incoming) + text/list/image (outgoing). */
+/** A short conversation: headings (outgoing) + text/list/image (incoming). */
 export const mockConversation: RichTextField = [
     { type: 'heading1', text: 'Shipping the blog', spans: [] },
     {

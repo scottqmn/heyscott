@@ -56,54 +56,63 @@ tokens (extends the theme — does not fork it).
 
 - **`bubbleShape.tsx`** — the single source of truth for the bubble silhouette.
   It reproduces heyscott's ORIGINAL human-made tail
-  (`Messages/components/Message/Message.module.scss`): a two-pseudo-element
-  trick — rounded body + same-color `::before` bulge + background-colored
-  `::after` that carves the concave underside. `BubbleMask` rebuilds that exact
-  composite as an SVG `<mask>` (white = body ∪ before, black = after), mirrored
-  for incoming. Tail metrics are the originals and, like the CSS, the tail is a
-  CONSTANT pixel size regardless of bubble size. Constants `BUBBLE_RADIUS` (25,
-  from the original), `BUBBLE_TAIL_OUT` (7). NOTE: don't "simplify" this to a
-  rounded-rect + separate tail path — that detaches the tail (leaves a notch);
-  the mask (with subtraction) is what makes the authentic scoop-and-hook.
+  (`Messages/components/Message/Message.module.scss`): a rounded body + a
+  same-color `::before` bulge + a background-colored `::after` that carves the
+  concave underside — the authentic "scoop-and-hook". `BubbleClip` rebuilds that
+  exact composite as ONE `<clipPath>` = rounded-rect body ∪ a single traced
+  tail-hook path (the visible `::before − ::after` region). Constants
+  `BUBBLE_RADIUS` (25), `BUBBLE_TAIL_OUT` (7); tail is a CONSTANT pixel size.
+  NOTES: (1) a single-path clipPath maps reliably onto both an SVG `<rect>`
+  (text) and an HTML element via `clip-path` (media) — CSS `mask-image` of an
+  SVG `<mask>` renders inconsistently on media (thin-spike tail). (2) `clip-path`
+  DOES clip `<iframe>`s (verified), so embeds get the shape too. (3) mirror for
+  incoming by computing `width - x` in JS, NOT an SVG `<g transform>` — a
+  transform inside `<clipPath>` does not clip reliably (clips to nothing).
 - **`DynamicBubble.tsx`** (client) — measures its content and renders the
-  `BubbleMask` sized to it. `variant='text'` paints a `<rect fill=color
-  mask=url(#id)>` as the bubble (content bg goes transparent once measured, with
-  a plain rounded-rect fallback before that so there's no flash); `variant=
-  'media'` applies the same mask via CSS `mask-image` so media **fills the
-  bubble and is masked to the silhouette, tail included**. Same shape for both.
-  - **Min-width hug (text):** an `inline-block` + `max-width` box does NOT
-    shrink to the widest wrapped line (CSS shrink-to-fit keeps the full
-    `max-width` once text wraps → ragged whitespace). `measureHugWidth` uses
-    `Range.getClientRects()` to find the widest rendered line and pins the
-    outer width to it (+ tail room), so the bubble hugs its text at every
-    length. `text-wrap: pretty` avoids last-line orphans. Re-runs on container
-    resize + `document.fonts.ready`. Chosen over `react-wrap-balancer` (extra
-    dep, per-instance scripts) and pure CSS (doesn't hug multi-line).
+  `BubbleClip` sized to it. `variant='text'` clips a `<rect fill=color>` to the
+  silhouette (content bg transparent once measured, rounded-rect fallback
+  before, so no flash); `variant='media'` applies the same clip via
+  `clip-path: url(#id)` so media **fills the bubble and is clipped to the
+  silhouette, tail included**. Same shape for both. Content font is responsive:
+  `text-base` (≈16px mobile) → `md:text-xl`.
+  - **Min-width hug (text):** measures a tight width so bubbles hug their text.
+    For multi-line it binary-searches the SMALLEST width that keeps the minimal
+    line count (balances the lines, kills ragged whitespace). The max width is
+    computed explicitly from the parent (`85%`) because a *percentage*
+    max-width on a flex item resolves against an indefinite basis and can be
+    ignored (caused mobile overflow). Re-runs on container resize +
+    `document.fonts.ready`. Chose DIY over `@chenglou/pretext` (see below).
 - `ChatBubble` — thin wrapper over `DynamicBubble` (text). `Message` — base
-  message: `ChatBubble` + scroll-focus + optional receipt.
-- `HeadingMessage` (incoming/grey — body text style, no heading size/weight),
-  `TextMessage` (outgoing/blue), `MediaMessage` (outgoing image/embed
-  attachment, masked to the bubble via `DynamicBubble variant='media'`).
+  message: `ChatBubble` + scroll reveal + optional receipt.
+- `HeadingMessage` (OUTGOING/blue — body text style, no heading size/weight),
+  `TextMessage` (INCOMING/grey), `MediaMessage` (INCOMING image/embed
+  attachment, clipped to the bubble via `DynamicBubble variant='media'`).
+  **Direction mapping is inverted from the obvious**: headings are the outgoing
+  (sent/right) side, body content is incoming (received/left).
 - `MessageThread` — centered, readable-width conversation column.
 - `ConversationText` + `messageSerializers` — Prismic rich-text → conversation:
-  **headings = incoming, paragraphs/lists/preformatted = outgoing, images/embeds
-  = outgoing attachments**. Wired into the `RichText` slice, so blog post bodies
-  render as conversations. `list`/`oList` pass through (bubbles can't nest in a
-  `<ul>`).
+  **headings = outgoing, paragraphs/lists/preformatted/images/embeds =
+  incoming**. Wired into the `RichText` slice, so blog post bodies render as
+  conversations. `list`/`oList` pass through (bubbles can't nest in a `<ul>`).
+- **Scroll reveal** (`useScrollReveal`): ONE-WAY. A message starts at
+  `HIDDEN_OPACITY` (0.25, tunable in `constants.ts`) and fades to full opacity
+  the first time it enters view, then STAYS revealed (observer disconnects — it
+  never fades back out).
+- **`@chenglou/pretext` assessment (not used):** a legit canvas-based text
+  measurement/balancing lib by chenglou, but `0.0.x` (brand-new, unstable API)
+  and its canvas measurement only approximates the browser's real line-breaking
+  (risking off-by-a-bit widths → overflow/re-wrap). We already measure the REAL
+  DOM wrap (`getClientRects`), which is exact, so a 0.0.x dep wasn't worth it.
 - SVG chrome in `assets/`: `BubbleTail` (a small standalone bubble rendered
-  from the shared `BubbleMask`, mirrored for incoming) and `ReadReceipt` (single
+  from the shared `BubbleClip`, mirrored for incoming) and `ReadReceipt` (single
   check = Delivered, double = Read).
-
-**Scroll focus effect:** `useInViewFocus` (IntersectionObserver, focus band via
-`FOCUS_ROOT_MARGIN`) dims off-focus messages to `UNFOCUSED_OPACITY` (**`0.6`,
-tunable in `constants.ts`**); the in-view message stays full opacity. Defaults
-to focused during SSR / before the observer attaches, so there's no dim flash.
 
 Note: text and media bubbles share ONE silhouette (`bubbleShape.tsx`). The
 homepage splash (`src/components/Messages`) still uses its own SCSS bubble and
 is intentionally left alone. When changing the bubble/tail shape, edit
 `bubbleShape.tsx` only — everything else derives from it. To eyeball the
-geometry without a browser, rasterize `BubbleSilhouette` to PNG with `sharp`.
+geometry without a browser, rasterize `BubbleClip` (or drive the running
+Storybook with headless Google Chrome `--screenshot`) to PNG.
 
 ## Storybook (`.storybook/`)
 
@@ -117,8 +126,9 @@ geometry without a browser, rasterize `BubbleSilhouette` to PNG with `sharp`.
   `.storybook/mocks/prismicio-next.tsx` (a browser stub rendering plain
   `<img>`/`<a>`) for Storybook only. If a new component imports `@prismicio/next`
   and its story white-screens, add the missing export to that stub.
-- Stories co-located with components (`*.stories.tsx`). `mocks.ts` holds
-  self-contained mock Prismic data (data-URI image, so stories work offline).
+- Stories co-located with components (`*.stories.tsx`). `mocks.ts` holds mock
+  Prismic data; media stories use seeded `picsum.photos` images + a real YouTube
+  embed (needs network to render — build-storybook doesn't render, so it's fine).
 - Story files ARE type-checked by `pnpm build` (tsconfig globs `**/*.tsx`) —
   keep them green, not just `build-storybook` (which uses esbuild, no typecheck).
 
