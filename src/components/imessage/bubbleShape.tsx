@@ -28,10 +28,12 @@ const BEFORE_CORNER_RY = 14;
 const AFTER_CORNER = 10; // ::after bottom-inner corner radius
 /**
  * Corner radius on the tail-side edge where consecutive same-sender bubbles
- * connect within a group — deliberately MORE rounded than the body so the
- * connecting corners bulge (clamped to the bubble's geometry).
+ * connect within a group — partway between the body's rounding and a squared
+ * corner, for a subtle connected look (clamped to the bubble's geometry).
+ * NOTE: on single-line bubbles the body radius is already ~height/2, so values
+ * at/above that render identically; this sits below it to read as in-between.
  */
-const GROUPED_RADIUS = 40;
+const GROUPED_RADIUS = 14;
 
 type Corners = { tl: number; tr: number; br: number; bl: number };
 
