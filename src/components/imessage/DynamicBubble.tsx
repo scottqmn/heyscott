@@ -27,6 +27,21 @@ import {
 const useIsoLayoutEffect =
     typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
+/**
+ * How the text bubble decides its tight hug width:
+ *  - `dom`     — the DIY approach: force the real DOM to wrap at each trial
+ *                width and read it back with `getClientRects` (exact, but N
+ *                synchronous reflows per measure).
+ *  - `pretext` — `@chenglou/pretext`: measure the wrap in pure JS against a
+ *                canvas font engine (no reflow, but only *approximates* the
+ *                browser's line-breaking).
+ *
+ * Both are kept in this file so the `PretextComparison` story can render the
+ * same content each way, side by side. This is an experiment branch — see
+ * `pretext-experiment/README.md` for the measured verdict.
+ */
+export type MeasureStrategy = 'dom' | 'pretext';
+
 type DynamicBubbleProps = {
     children: ReactNode;
     direction: BubbleDirection;
@@ -36,6 +51,8 @@ type DynamicBubbleProps = {
      * tail included.
      */
     variant?: 'text' | 'media';
+    /** Text-hug measurement engine (see {@link MeasureStrategy}). */
+    measure?: MeasureStrategy;
     className?: string;
 };
 
@@ -50,6 +67,95 @@ const FG: Record<BubbleDirection, string> = {
 
 /** Fraction of the surrounding column a bubble may occupy at its widest. */
 const MAX_WIDTH_FRACTION = 0.85;
+
+// ===========================================================================
+// Strategy A — `dom`: the DIY approach (exact, measures the real browser wrap).
+// ===========================================================================
+
+// Per-line rects of an element's text content (one rect per visual line).
+function lineRects(content: HTMLElement): DOMRect[] {
+    const range = document.createRange();
+    range.selectNodeContents(content);
+    const rects = Array.from(range.getClientRects());
+    if (typeof range.detach === 'function') range.detach();
+    return rects;
+}
+
+function lineCount(content: HTMLElement): number {
+    const tops = new Set<number>();
+    for (const r of lineRects(content)) tops.add(Math.round(r.top));
+    return tops.size || 1;
+}
+
+function widestLine(content: HTMLElement): number {
+    let widest = 0;
+    for (const r of lineRects(content)) widest = Math.max(widest, r.width);
+    return widest;
+}
+
+/**
+ * DIY: the tightest content-box width, measured against the REAL DOM wrap.
+ * Binary-searches the SMALLEST width that still wraps to the same (minimal)
+ * line count, forcing the DOM to re-wrap via `setWidth` at each trial and
+ * reading it back with `getClientRects`. Exact, but does N reflows per measure.
+ * Returns `null` if it can't measure.
+ */
+function measureHugWidthDom(
+    outer: HTMLElement,
+    content: HTMLElement,
+    setWidth: (contentWidth: number) => void
+): number | null {
+    if (typeof document === 'undefined' || !document.createRange) return null;
+
+    const cs = getComputedStyle(content);
+    const padX =
+        parseFloat(cs.paddingLeft || '0') + parseFloat(cs.paddingRight || '0');
+
+    // The widest the bubble may be: a fraction of the surrounding column,
+    // computed explicitly so a flaky percentage max-width can't let it overflow.
+    const parentW = outer.parentElement?.offsetWidth ?? 0;
+    const maxBoxW =
+        parentW > 0
+            ? Math.max(
+                  0,
+                  Math.floor(parentW * MAX_WIDTH_FRACTION) - BUBBLE_TAIL_OUT
+              )
+            : null;
+    if (!maxBoxW) return null;
+
+    // Wrap at the cap, then read the line count there (the minimum).
+    setWidth(maxBoxW);
+    const naturalLines = lineCount(content);
+
+    if (naturalLines <= 1) {
+        const w = widestLine(content);
+        return w > 0 ? Math.min(Math.ceil(w + padX) + 1, maxBoxW) : null;
+    }
+
+    // Longest unbreakable run — the floor for the search.
+    outer.style.width = 'min-content';
+    const minBoxW = Math.min(content.offsetWidth, maxBoxW);
+
+    // Smallest content-box width that keeps `naturalLines` lines.
+    let lo = minBoxW;
+    let hi = maxBoxW;
+    let best = maxBoxW;
+    for (let i = 0; i < 24 && hi - lo > 1; i++) {
+        const mid = Math.floor((lo + hi) / 2);
+        setWidth(mid);
+        if (lineCount(content) <= naturalLines) {
+            best = mid;
+            hi = mid;
+        } else {
+            lo = mid;
+        }
+    }
+    return best;
+}
+
+// ===========================================================================
+// Strategy B — `pretext`: canvas measurement (no reflow, approximate wrap).
+// ===========================================================================
 
 /**
  * Builds the CSS-canvas font shorthand pretext needs (`[style] [weight] [size]
@@ -90,7 +196,7 @@ function fontStringFor(cs: CSSStyleDeclaration): string {
  * So the returned width can be off by a pixel or two vs. the real wrap. Returns
  * `null` if it can't measure (SSR, empty text, no parent width).
  */
-function measureHugWidth(
+function measureHugWidthPretext(
     outer: HTMLElement,
     content: HTMLElement
 ): number | null {
@@ -174,6 +280,7 @@ export const DynamicBubble = ({
     children,
     direction,
     variant = 'text',
+    measure: strategy = 'pretext',
     className,
 }: DynamicBubbleProps) => {
     const outerRef = useRef<HTMLDivElement>(null);
@@ -207,11 +314,18 @@ export const DynamicBubble = ({
         const content = contentRef.current;
         if (!outer || !content) return;
 
+        const setWidth = (contentWidth: number) => {
+            outer.style.width = `${contentWidth + BUBBLE_TAIL_OUT}px`;
+        };
+
         const measure = () => {
-            const hug = measureHugWidth(outer, content);
+            const hug =
+                strategy === 'dom'
+                    ? measureHugWidthDom(outer, content, setWidth)
+                    : measureHugWidthPretext(outer, content);
             // Pin the outer to the hugging width (+ the tail-side room), or
             // release it if we couldn't measure.
-            if (hug != null) outer.style.width = `${hug + BUBBLE_TAIL_OUT}px`;
+            if (hug != null) setWidth(hug);
             else outer.style.width = '';
             applySize(outer.offsetWidth, outer.offsetHeight);
         };
@@ -237,7 +351,7 @@ export const DynamicBubble = ({
             cancelled = true;
             observer?.disconnect();
         };
-    }, [variant, direction, children]);
+    }, [variant, direction, children, strategy]);
 
     const ready = size.width > 0 && size.height > 0;
 

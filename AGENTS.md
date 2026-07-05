@@ -112,7 +112,10 @@ tokens (extends the theme — does not fork it).
   conservative. It also can't see mixed inline fonts (bold/links measured as one
   font) and adds ~16 KB gzip. DIY measures ground truth → tighter AND correct.
   Verdict: keep DIY; pretext would only pay off at far larger scale or in SSR/
-  canvas layout with no DOM to measure.
+  canvas layout with no DOM to measure. On that branch `DynamicBubble` keeps
+  BOTH engines behind a `measure?: 'dom' | 'pretext'` prop, and the
+  `iMessage/PretextComparison` story renders the same content each way side by
+  side (Latin renders identical; CJK is where pretext visibly hugs looser).
 - SVG chrome in `assets/`: `BubbleTail` (a small standalone bubble rendered
   from the shared `BubbleClip`, mirrored for incoming) and `ReadReceipt` (single
   check = Delivered, double = Read).

@@ -5,7 +5,7 @@ export { TextMessage } from './TextMessage';
 export { MediaMessage } from './MediaMessage';
 export { MessageThread } from './MessageThread';
 export { ConversationText, messageSerializers } from './ConversationText';
-export { DynamicBubble } from './DynamicBubble';
+export { DynamicBubble, type MeasureStrategy } from './DynamicBubble';
 export {
     BubbleClip,
     BUBBLE_RADIUS,

@@ -25,6 +25,27 @@ temporarily swapped). Plus a numeric harness that runs BOTH algorithms on the
 same strings and verifies pretext's chosen width against the **real browser wrap**
 (ground truth). Harness lives in the session scratchpad; results below.
 
+## Side-by-side Storybook story
+
+`iMessage/PretextComparison` (`src/components/imessage/PretextComparison.stories.tsx`)
+renders the same content (short / medium / long / url / cjk, both directions)
+with **both** engines in adjacent columns — DIY (`measure="dom"`) left, pretext
+(`measure="pretext"`) right — so wrap tightness is directly comparable. Both
+implementations are kept in `DynamicBubble.tsx` behind the `measure` prop
+(default `pretext` on this branch). See `comparison-story-sidebyside.png` /
+`comparison-story-wide.png`.
+
+**What the live story shows** (Helvetica Neue *Light*, the real bubble font):
+Latin and URL rows render **pixel-identical** between the two engines; the **CJK
+row is the visible divergence** — pretext hugs to a clearly wider box. So in the
+actual product font, pretext matches the DOM for Latin and only loses on CJK /
+tight widths.
+
+> Note: the numeric table below was measured with Helvetica Neue *Regular* (a
+> heavier face than the component's *Light*), so its Latin Δw values overstate
+> what the live component shows. The **direction** (pretext ≥ DIY, worst on CJK)
+> holds; the CJK gap is the robust, visible one.
+
 ## Results
 
 ### Correctness — pretext never overflowed
