@@ -16,8 +16,9 @@ export const repositoryName =
     process.env.NEXT_PUBLIC_PRISMIC_ENVIRONMENT || config.repositoryName;
 
 /**
- * Maps Prismic documents to URLs in this app. The blog lives under /blog,
- * matching the App Router pages in src/app/blog.
+ * Maps Prismic documents to URLs. Kept for when the blog is re-wired — the
+ * `/blog` App Router pages are not currently mounted (the live site is just the
+ * splash), so this mapping is inert until they return.
  */
 const routes: prismic.ClientConfig['routes'] = [
     { type: 'blog_post', path: '/blog/:uid' },
