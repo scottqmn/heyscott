@@ -7,7 +7,12 @@ bubbles in iMessage blue (`--color-imessage-sent` `#075b97`) / grey
 
 ## Stack
 
-- **Next.js 16** (App Router, Turbopack) + **React 19**.
+- **Next.js 16** (App Router) + **React 19**. Build/dev run on **webpack**
+  (`next dev/build --webpack`), NOT Turbopack — Turbopack emits class static
+  blocks (Safari 16.4+ syntax) in its runtime and ignores `browserslist`, so its
+  bundle fails to parse on older iOS Safari (blank site). Webpack down-levels to
+  the `browserslist` floor (iOS/Safari ≥ 15.4 in package.json). Keep `--webpack`
+  unless Turbopack gains browser-target down-leveling.
 - **Tailwind CSS v4**, CSS-first `@theme` tokens in `src/app/globals.css`
   (no `tailwind.config.*`). Semantic tokens (`--color-background`,
   `--color-foreground`, `--color-muted*`, `--color-accent`, `--color-border`)
@@ -52,11 +57,18 @@ bubbles in iMessage blue (`--color-imessage-sent` `#075b97`) / grey
 
 The live site is a single splash screen and NOTHING else. `/`
 (`src/app/page.tsx`) renders ONLY `src/components/Messages` (its own SCSS
-bubble + framer-motion stagger animation): a "Hey Scott" **sent** bubble, then
-"Hey! I'm a little busy at the moment." / "Talk soon?" **received** bubbles — no
-links, no nav. This is a pixel match to production heyscott.com; the copy +
-animation live in `Messages/constants.ts` + `Messages/Messages.tsx`. Don't add
-links or other content to `/` unless the live site does.
+bubble): a "Hey Scott" **sent** bubble, then "Hey! I'm a little busy at the
+moment." / "Talk soon?" **received** bubbles — no links, no nav. This is a pixel
+match to production heyscott.com; the copy lives in `Messages/constants.ts`.
+Don't add links or other content to `/` unless the live site does.
+
+**The splash is deliberately JS-free.** `Messages` is a server component and the
+staggered entrance is a PURE CSS animation (`.splash-message` in globals.css,
+`animation-fill-mode: both` + per-bubble inline `animation-delay`). The bubbles
+are present and VISIBLE in the SSR HTML with zero client JS — the animation is
+progressive enhancement. This replaced a framer-motion version that left every
+bubble at `opacity:0` until JS ran (blank page whenever client JS failed to run,
+e.g. older iOS Safari). framer-motion is removed. Keep the splash JS-free.
 
 **Not wired into the live site right now:** the blog pages and the whole
 Tailwind-v4 iMessage component library. The `/blog` index + `/blog/[uid]` post
