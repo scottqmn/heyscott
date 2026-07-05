@@ -10,6 +10,12 @@ import {
     type ReactNode,
 } from 'react';
 import {
+    measureLineStats,
+    measureNaturalWidth,
+    prepareWithSegments,
+    type PrepareOptions,
+} from '@chenglou/pretext';
+import {
     BubbleClip,
     BUBBLE_RADIUS,
     BUBBLE_TAIL_OUT,
@@ -42,52 +48,56 @@ const FG: Record<BubbleDirection, string> = {
     incoming: 'var(--color-imessage-received-foreground)',
 };
 
-// Per-line rects of an element's text content (one rect per visual line).
-function lineRects(content: HTMLElement): DOMRect[] {
-    const range = document.createRange();
-    range.selectNodeContents(content);
-    const rects = Array.from(range.getClientRects());
-    if (typeof range.detach === 'function') range.detach();
-    return rects;
-}
-
-function lineCount(content: HTMLElement): number {
-    const tops = new Set<number>();
-    for (const r of lineRects(content)) tops.add(Math.round(r.top));
-    return tops.size || 1;
-}
-
-function widestLine(content: HTMLElement): number {
-    let widest = 0;
-    for (const r of lineRects(content)) widest = Math.max(widest, r.width);
-    return widest;
-}
-
 /** Fraction of the surrounding column a bubble may occupy at its widest. */
 const MAX_WIDTH_FRACTION = 0.85;
 
 /**
- * Computes the tightest content-box width for a text bubble and returns it, or
- * `null` if it can't measure. Two problems to solve:
+ * Builds the CSS-canvas font shorthand pretext needs (`[style] [weight] [size]
+ * [family]`) from an element's computed style. `getComputedStyle(el).font` is
+ * unreliable in Chrome (often returns ''), so we assemble it from parts.
+ */
+function fontStringFor(cs: CSSStyleDeclaration): string {
+    const style = cs.fontStyle && cs.fontStyle !== 'normal' ? cs.fontStyle : '';
+    const weight =
+        cs.fontWeight && cs.fontWeight !== 'normal' ? cs.fontWeight : '';
+    return [style, weight, cs.fontSize, cs.fontFamily]
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+}
+
+/**
+ * pretext-based version of the tightest-content-box measurement.
  *
- *  1. An `inline-block` + `max-width` box doesn't shrink to the widest wrapped
- *     line (CSS shrink-to-fit keeps the full `max-width` once text wraps). And
- *     a *percentage* max-width on a flex item can resolve against an indefinite
- *     basis and be ignored — so we cap the width explicitly here in JS.
- *  2. Greedy line-breaking fills early lines and leaves a short last line, so
- *     hugging the widest line still leaves a wide box with lots of whitespace.
+ * Instead of forcing the real DOM to wrap at each trial width and reading it
+ * back (`getClientRects`), pretext measures the wrap in pure JS against the
+ * browser's font engine (canvas `measureText` + `Intl.Segmenter`). That lets
+ * the whole "smallest width that keeps the minimal line count" search run
+ * WITHOUT any DOM reflow — one `prepareWithSegments()` then N cheap
+ * `measureLineStats()` calls.
  *
- * So for multi-line text we binary-search the SMALLEST width that still wraps
- * to the same (minimal) number of lines — this balances the lines and shrinks
- * the box as far as it can go without adding a line. `setWidth(w)` sets the
- * content-box width via the outer element (which carries the tail padding).
+ * Two problems solved (same as the DIY path this replaces):
+ *  1. `inline-block` + `max-width` doesn't shrink to the widest wrapped line,
+ *     and a percentage max-width on a flex item can be ignored — so we cap the
+ *     box width explicitly in JS.
+ *  2. Greedy line-breaking leaves a short last line; hugging the widest line
+ *     still leaves whitespace. So we search for the SMALLEST width that keeps
+ *     the minimal line count, which re-balances the lines tightly.
+ *
+ * Caveat (the reason this is an experiment): pretext's canvas measurement only
+ * *approximates* the browser's real line-breaking, and it measures the plain
+ * `textContent` with ONE font — mixed inline fonts (bold/links) aren't modeled.
+ * So the returned width can be off by a pixel or two vs. the real wrap. Returns
+ * `null` if it can't measure (SSR, empty text, no parent width).
  */
 function measureHugWidth(
     outer: HTMLElement,
-    content: HTMLElement,
-    setWidth: (contentWidth: number) => void
+    content: HTMLElement
 ): number | null {
-    if (typeof document === 'undefined' || !document.createRange) return null;
+    if (typeof window === 'undefined') return null;
+
+    const text = content.textContent ?? '';
+    if (!text.trim()) return null;
 
     const cs = getComputedStyle(content);
     const padX =
@@ -96,43 +106,61 @@ function measureHugWidth(
     // The widest the bubble may be: a fraction of the surrounding column,
     // computed explicitly so a flaky percentage max-width can't let it overflow.
     const parentW = outer.parentElement?.offsetWidth ?? 0;
-    const maxBoxW =
-        parentW > 0
-            ? Math.max(
-                  0,
-                  Math.floor(parentW * MAX_WIDTH_FRACTION) - BUBBLE_TAIL_OUT
-              )
-            : null;
+    if (parentW <= 0) return null;
+    const maxBoxW = Math.max(
+        0,
+        Math.floor(parentW * MAX_WIDTH_FRACTION) - BUBBLE_TAIL_OUT
+    );
     if (!maxBoxW) return null;
 
-    // Wrap at the cap, then read the line count there (the minimum).
-    setWidth(maxBoxW);
-    const naturalLines = lineCount(content);
+    // Available width for the TEXT itself (box minus horizontal padding).
+    const maxTextW = maxBoxW - padX;
+    if (maxTextW <= 0) return null;
 
-    if (naturalLines <= 1) {
-        const w = widestLine(content);
-        return w > 0 ? Math.min(Math.ceil(w + padX) + 1, maxBoxW) : null;
+    const options: PrepareOptions = { whiteSpace: 'normal' };
+    const letterSpacing = parseFloat(cs.letterSpacing || '');
+    if (Number.isFinite(letterSpacing) && letterSpacing !== 0) {
+        options.letterSpacing = letterSpacing;
     }
 
-    // Longest unbreakable run — the floor for the search.
-    outer.style.width = 'min-content';
-    const minBoxW = Math.min(content.offsetWidth, maxBoxW);
+    let prepared;
+    try {
+        prepared = prepareWithSegments(text, fontStringFor(cs), options);
+    } catch {
+        return null;
+    }
 
-    // Smallest content-box width that keeps `naturalLines` lines.
-    let lo = minBoxW;
-    let hi = maxBoxW;
-    let best = maxBoxW;
+    // Line count at the cap = the minimum achievable line count.
+    const naturalLines = measureLineStats(prepared, maxTextW).lineCount;
+
+    // Tight box = widest actual line (+ padding) for the chosen wrap width.
+    const boxFor = (maxLineWidth: number) =>
+        Math.min(Math.ceil(maxLineWidth + padX) + 1, maxBoxW);
+
+    if (naturalLines <= 1) {
+        const stats = measureLineStats(prepared, maxTextW);
+        return stats.maxLineWidth > 0 ? boxFor(stats.maxLineWidth) : null;
+    }
+
+    // Floor of the search: the longest unbreakable run (widest forced line).
+    const minTextW = Math.min(measureNaturalWidth(prepared), maxTextW);
+
+    // Smallest text width that still keeps `naturalLines` lines — all in JS,
+    // no DOM reflow. Track the tight widest-line width at that best width.
+    let lo = minTextW;
+    let hi = maxTextW;
+    let bestWidth = measureLineStats(prepared, maxTextW).maxLineWidth;
     for (let i = 0; i < 24 && hi - lo > 1; i++) {
-        const mid = Math.floor((lo + hi) / 2);
-        setWidth(mid);
-        if (lineCount(content) <= naturalLines) {
-            best = mid;
+        const mid = (lo + hi) / 2;
+        const stats = measureLineStats(prepared, mid);
+        if (stats.lineCount <= naturalLines) {
+            bestWidth = stats.maxLineWidth;
             hi = mid;
         } else {
             lo = mid;
         }
     }
-    return best;
+    return boxFor(bestWidth);
 }
 
 /**
@@ -179,15 +207,11 @@ export const DynamicBubble = ({
         const content = contentRef.current;
         if (!outer || !content) return;
 
-        const setWidth = (contentWidth: number) => {
-            outer.style.width = `${contentWidth + BUBBLE_TAIL_OUT}px`;
-        };
-
         const measure = () => {
-            const hug = measureHugWidth(outer, content, setWidth);
+            const hug = measureHugWidth(outer, content);
             // Pin the outer to the hugging width (+ the tail-side room), or
             // release it if we couldn't measure.
-            if (hug != null) setWidth(hug);
+            if (hug != null) outer.style.width = `${hug + BUBBLE_TAIL_OUT}px`;
             else outer.style.width = '';
             applySize(outer.offsetWidth, outer.offsetHeight);
         };
