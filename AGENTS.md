@@ -103,6 +103,16 @@ tokens (extends the theme — does not fork it).
   and its canvas measurement only approximates the browser's real line-breaking
   (risking off-by-a-bit widths → overflow/re-wrap). We already measure the REAL
   DOM wrap (`getClientRects`), which is exact, so a 0.0.x dep wasn't worth it.
+  **Empirically confirmed** on the throwaway experiment branch
+  `fm/heyscott-pretext-t7` (swaps pretext into `DynamicBubble`; see
+  `pretext-experiment/README.md` there): pretext is *safe* (matched the browser
+  line count in all 20 test cases — never overflowed) and ~4.6× faster/measure
+  (no reflow), BUT hugs **looser** than the DIY DOM measure — up to +57px slack
+  for Latin, +140px for CJK — because it approximates the wrap and rounds
+  conservative. It also can't see mixed inline fonts (bold/links measured as one
+  font) and adds ~16 KB gzip. DIY measures ground truth → tighter AND correct.
+  Verdict: keep DIY; pretext would only pay off at far larger scale or in SSR/
+  canvas layout with no DOM to measure.
 - SVG chrome in `assets/`: `BubbleTail` (a small standalone bubble rendered
   from the shared `BubbleClip`, mirrored for incoming) and `ReadReceipt` (single
   check = Delivered, double = Read).
