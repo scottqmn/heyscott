@@ -1,0 +1,33 @@
+{
+    "id": "images",
+    "type": "SharedSlice",
+    "name": "Images",
+    "description": "One or more images with optional captions",
+    "variations": [
+        {
+            "id": "default",
+            "name": "Default",
+            "docURL": "...",
+            "version": "initial",
+            "description": "Default",
+            "imageUrl": "",
+            "primary": {},
+            "items": {
+                "image": {
+                    "type": "Image",
+                    "config": {
+                        "constraint": {},
+                        "thumbnails": [],
+                        "label": "Image"
+                    }
+                },
+                "caption": {
+                    "type": "Text",
+                    "config": {
+                        "label": "Caption"
+                    }
+                }
+            }
+        }
+    ]
+}

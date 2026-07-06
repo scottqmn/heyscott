@@ -1,0 +1,50 @@
+{
+    "id": "code_block",
+    "type": "SharedSlice",
+    "name": "CodeBlock",
+    "description": "Syntax-highlighted code",
+    "variations": [
+        {
+            "id": "default",
+            "name": "Default",
+            "docURL": "...",
+            "version": "initial",
+            "description": "Default",
+            "imageUrl": "",
+            "primary": {
+                "code": {
+                    "type": "Text",
+                    "config": {
+                        "label": "Code",
+                        "placeholder": "Paste your code here"
+                    }
+                },
+                "language": {
+                    "type": "Select",
+                    "config": {
+                        "label": "Language",
+                        "options": [
+                            "plaintext",
+                            "javascript",
+                            "typescript",
+                            "jsx",
+                            "tsx",
+                            "css",
+                            "json",
+                            "bash",
+                            "markdown"
+                        ],
+                        "default_value": "plaintext"
+                    }
+                },
+                "filename": {
+                    "type": "Text",
+                    "config": {
+                        "label": "Filename (optional)"
+                    }
+                }
+            },
+            "items": {}
+        }
+    ]
+}
