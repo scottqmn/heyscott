@@ -43,8 +43,18 @@ bubbles in iMessage blue (`--color-imessage-sent` `#075b97`) / grey
   `NEXT_PUBLIC_PRISMIC_ENVIRONMENT` first, else `slicemachine.config.json`.
 - Custom type `blog_post` in `customtypes/blog_post/` (standard Slice Machine
   location, unlike needless which keeps them under `lib/prismic/customtypes`).
+  Fields: `title` (StructuredText heading1), `image` (Image), a `body` slice
+  zone, and the standard SEO & Metadata tab (`meta_title`/`meta_description`/
+  `meta_image`). The `body` slice zone offers `rich_text` and `heading`. **The
+  schema is owned by `develop` (Prismic Slice Machine) — do NOT edit
+  `customtypes/**`, `src/slices/**/model.json`, `slicemachine.config.json`, or
+  `prismicio-types.d.ts` in feature branches; those land via the customtype
+  sync PRs.** Regenerate types with `pnpm prismic:types` only when the schema
+  itself intentionally changes.
 - Slices in `src/slices/*` (RichText, Heading, Quote, CodeBlock, Images,
-  Divider), registered in `src/slices/index.ts`. Quote renders as an incoming
+  Divider) are all registered in `src/slices/index.ts` as a library; the
+  `blog_post` body slice zone references `rich_text` + `heading`. `RichText`'s
+  model is a single rich text field (`content`). Quote renders as an incoming
   iMessage bubble.
 - Preview routes under `src/app/api/(exit-)preview`, `src/app/slice-simulator`
   (must be `'use client'` — it passes a render fn).
@@ -70,11 +80,39 @@ progressive enhancement. This replaced a framer-motion version that left every
 bubble at `opacity:0` until JS ran (blank page whenever client JS failed to run,
 e.g. older iOS Safari). framer-motion is removed. Keep the splash JS-free.
 
-**Not wired into the live site right now:** the blog pages and the whole
-Tailwind-v4 iMessage component library. The `/blog` index + `/blog/[uid]` post
-routes were REMOVED (only Prismic preview API + `/slice-simulator` tooling
-routes remain besides `/`). `src/prismicio.ts` keeps an inert `blog_post` route
-mapping for when the blog returns.
+**Not linked from the live site, but the blog pages exist:** the `/` splash is
+still the only thing the live site links to, but both blog routes are mounted:
+- `/blog` (`src/app/blog/page.tsx`) — the INDEX, rendered as an iMessage
+  compose bar: `PostListComposer` pops up the post list as tail-less link
+  bubbles. Wired to `getAllPosts()` mapped to `BlogPostLink` (`src/lib/posts.ts`),
+  falling back to `PLACEHOLDER_POSTS` when Prismic is unwired (query returns `[]`).
+- `/blog/[uid]` (`src/app/blog/[uid]/page.tsx`) — a single post, rendered as an
+  iMessage conversation via `src/components/BlogPost`.
+
+`getPost`/`getAllPosts` (`src/lib/prismic/queries.ts`) swallow fetch errors, so
+with the placeholder repo the post page just `notFound()`s and the index falls
+back to placeholders — the build stays green. Once a real repo is wired the
+same code serves content. `src/prismicio.ts` keeps the `blog_post` route mapping.
+- **`BlogPost` render mapping** (`src/components/BlogPost`) — matches develop's
+  schema (`title` + `image`, **no subtitle**): `title` → outgoing
+  (`HeadingMessage`), `image` → outgoing media bubble
+  (`MediaMessage direction='outgoing'`). The body ARRIVES as incoming bubbles:
+  each `rich_text` slice is split PER top-level block by the component-local
+  `richTextToBubbles` (NOT the shared `ConversationText`, which sends headings
+  outgoing) — paragraphs/headings → one `TextMessage` each (inline formatting
+  kept); a blank line (empty paragraph) is dropped but forces a group split; a
+  contiguous run of same-type list items collapses into ONE bubble with a native
+  `<ul>`/`<ol>` (`list-disc/list-decimal pl-5`, inline markers); images/embeds →
+  standalone `MediaMessage`. Other slice types (`heading`) stay one bubble.
+  Verified via `BlogPost.stories.tsx`.
+- **`MediaMessage` takes `direction`** (default `incoming`); `outgoing`
+  right-aligns it and gives it the blue-side tail.
+- **Grouping hints** — `Message`/`MediaMessage` accept `startsGroup` and
+  `standalone` (not rendered; read by `MessageThread`). `MessageThread` forces a
+  group boundary between adjacent messages when the side flips, the later one has
+  `startsGroup` (blank-line split), or either is `standalone` (media reads as its
+  own message). Everything else groups with its same-side neighbour. `sideOf`
+  still derives the side (incoming/outgoing) from component type + `direction`.
 
 **Kept in the codebase (just unmounted):** the entire iMessage component library
 + all Storybook stories — see below. A prior "whole site is one persistent

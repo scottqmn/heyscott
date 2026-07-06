@@ -3,30 +3,49 @@
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
 import { DynamicBubble } from './DynamicBubble';
+import type { MessageDirection } from './Message';
 import { HIDDEN_OPACITY, REVEALED_OPACITY } from './constants';
 import { useScrollReveal } from './useScrollReveal';
 
 type MediaMessageProps = {
     /** The image / embed / iframe to receive as an attachment. */
     children: ReactNode;
+    /**
+     * `incoming` = grey, tail bottom-left (an attachment arriving);
+     * `outgoing` = blue side, tail bottom-right (an attachment being sent).
+     */
+    direction?: MessageDirection;
     /** Optional caption shown beneath the attachment. */
     caption?: ReactNode;
     grouped?: boolean;
     /** Draw the tail. Grouped messages omit it except the group's last. */
     tail?: boolean;
+    /**
+     * Grouping hint read by {@link MessageThread}: force a new group to START
+     * at this message (see {@link MessageProps.startsGroup}).
+     */
+    startsGroup?: boolean;
+    /**
+     * Grouping hint read by {@link MessageThread}: this message is its OWN
+     * group, breaking the chain on both sides (see
+     * {@link MessageProps.standalone}). Images/embeds set this so they read as
+     * standalone attachments.
+     */
+    standalone?: boolean;
     revealOnScroll?: boolean;
     className?: string;
 };
 
 /**
- * An image or embed rendered as an INCOMING attachment (grey side, tail
- * bottom-left). The media fills the bubble edge-to-edge and is masked to the
- * speech-bubble silhouette — tail included — via {@link DynamicBubble}'s
- * `media` variant, so the attachment takes the exact bubble shape rather than
- * a rectangle floating inside one.
+ * An image or embed rendered as an attachment, masked to the speech-bubble
+ * silhouette — tail included — via {@link DynamicBubble}'s `media` variant, so
+ * the attachment takes the exact bubble shape rather than a rectangle floating
+ * inside one. Defaults to an INCOMING attachment (grey, left); pass
+ * `direction='outgoing'` to send it (right-aligned).
  */
 export const MediaMessage = ({
     children,
+    direction = 'incoming',
     caption,
     grouped = false,
     tail = true,
@@ -35,6 +54,7 @@ export const MediaMessage = ({
 }: MediaMessageProps) => {
     const { ref, revealed } = useScrollReveal<HTMLDivElement>();
     const shown = revealed || !revealOnScroll;
+    const outgoing = direction === 'outgoing';
 
     return (
         <div
@@ -45,10 +65,10 @@ export const MediaMessage = ({
             )}
             style={{ opacity: shown ? REVEALED_OPACITY : HIDDEN_OPACITY }}
         >
-            <div className='flex justify-start'>
+            <div className={clsx('flex', outgoing ? 'justify-end' : 'justify-start')}>
                 <figure className={clsx('max-w-[85%] sm:max-w-[75%]', className)}>
                     <DynamicBubble
-                        direction='incoming'
+                        direction={direction}
                         variant='media'
                         tail={tail}
                         grouped={grouped}
@@ -56,7 +76,12 @@ export const MediaMessage = ({
                         {children}
                     </DynamicBubble>
                     {caption && (
-                        <figcaption className='mt-1 pl-2 text-left text-sm text-muted-foreground'>
+                        <figcaption
+                            className={clsx(
+                                'mt-1 text-sm text-muted-foreground',
+                                outgoing ? 'pr-2 text-right' : 'pl-2 text-left'
+                            )}
+                        >
                             {caption}
                         </figcaption>
                     )}

@@ -18,6 +18,18 @@ export type MessageProps = {
     grouped?: boolean;
     /** Draw the tail. Grouped messages omit it except the group's last. */
     tail?: boolean;
+    /**
+     * Grouping hint read by {@link MessageThread} (not rendered here): force a
+     * new group to START at this message even if the previous one is same-side
+     * — e.g. a blank line between paragraphs.
+     */
+    startsGroup?: boolean;
+    /**
+     * Grouping hint read by {@link MessageThread} (not rendered here): this
+     * message is its OWN group, breaking the tail/rounding chain on both sides
+     * so neighbours never group with it — used for standalone media.
+     */
+    standalone?: boolean;
     /** Delivered/read status, shown under outgoing messages only. */
     receipt?: ReceiptStatus | null;
     /** Fade in from {@link HIDDEN_OPACITY} the first time it scrolls into view. */
