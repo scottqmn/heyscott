@@ -164,7 +164,17 @@ tokens (extends the theme — does not fork it).
 - **Scroll reveal** (`useScrollReveal`): ONE-WAY. A message starts at
   `HIDDEN_OPACITY` (0.25, tunable in `constants.ts`) and fades to full opacity
   the first time it enters view, then STAYS revealed (observer disconnects — it
-  never fades back out).
+  never fades back out). This hook is the PRODUCTION reveal and is deliberately
+  NOT IntersectionObserver-driven (scroll-geometry check — IO callbacks proved
+  unreliable on iOS Safari momentum scroll; see the hook's doc).
+- **`RevealOnView`** — a separate, clean IntersectionObserver-based reveal
+  WRAPPER (fade + slight slide/scale, matching the splash `splashIn` feel).
+  Wraps arbitrary children; props `threshold`/`rootMargin`/`once`/`delay`/`as`;
+  respects `prefers-reduced-motion`; reveals once by default and mitigates the
+  iOS "already-intersecting on mount" drop with a one-off geometry check. Built
+  because the captain wanted an IO wrapper specifically — it does NOT replace
+  `useScrollReveal` (that stays the production reveal). Use `RevealOnView` when
+  you want observer semantics (thresholds, re-reveal via `once={false}`).
 - **`@chenglou/pretext` assessment (not used):** a legit canvas-based text
   measurement/balancing lib by chenglou, but `0.0.x` (brand-new, unstable API)
   and its canvas measurement only approximates the browser's real line-breaking

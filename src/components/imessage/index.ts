@@ -16,6 +16,8 @@ export { BubbleTail } from './assets/BubbleTail';
 export { ReadReceipt } from './assets/ReadReceipt';
 export type { ReceiptStatus } from './assets/ReadReceipt';
 export { useScrollReveal } from './useScrollReveal';
+export { RevealOnView } from './RevealOnView';
+export type { RevealOnViewProps } from './RevealOnView';
 export {
     HIDDEN_OPACITY,
     REVEALED_OPACITY,
