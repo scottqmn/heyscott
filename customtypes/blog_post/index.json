@@ -1,7 +1,7 @@
 {
     "id": "blog_post",
     "label": "Blog Post",
-    "format": "custom",
+    "format": "page",
     "repeatable": true,
     "status": true,
     "json": {
@@ -19,20 +19,6 @@
                     "label": "Title"
                 }
             },
-            "excerpt": {
-                "type": "StructuredText",
-                "config": {
-                    "multi": "strong, em",
-                    "label": "Excerpt",
-                    "placeholder": "Shown as the preview message in the blog thread"
-                }
-            },
-            "date": {
-                "type": "Date",
-                "config": {
-                    "label": "Publish date"
-                }
-            },
             "image": {
                 "type": "Image",
                 "config": {
@@ -43,25 +29,13 @@
             },
             "body": {
                 "type": "Slices",
-                "fieldset": "Slice zone",
+                "fieldset": "Slice Zone",
                 "config": {
                     "choices": {
                         "rich_text": {
                             "type": "SharedSlice"
                         },
                         "heading": {
-                            "type": "SharedSlice"
-                        },
-                        "quote": {
-                            "type": "SharedSlice"
-                        },
-                        "code_block": {
-                            "type": "SharedSlice"
-                        },
-                        "images": {
-                            "type": "SharedSlice"
-                        },
-                        "divider": {
                             "type": "SharedSlice"
                         }
                     }
