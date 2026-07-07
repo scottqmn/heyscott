@@ -46,7 +46,10 @@ export const BlogPost = ({ post }: BlogPostProps) => {
         <main className='min-h-screen py-16'>
             <MessageThread>
                 {isFilled.richText(title) && (
-                    <HeadingMessage>{asText(title)}</HeadingMessage>
+                    <HeadingMessage>
+                        {/* The post title is the page's h1 (a11y). */}
+                        <h1>{asText(title)}</h1>
+                    </HeadingMessage>
                 )}
                 {isFilled.image(image) && (
                     <MediaMessage direction='outgoing'>

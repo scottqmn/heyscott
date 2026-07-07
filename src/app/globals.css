@@ -28,7 +28,7 @@
     /* Darker, translucent gray — the iMessage typing-indicator bubble tone,
        used for post-link bubbles. Text follows the semantic foreground so it
        stays legible over the blended gray in both light and dark. */
-    --color-imessage-typing: rgba(118, 118, 128, 0.5);
+    --color-imessage-typing: rgba(118, 118, 128, 0.9);
     --color-imessage-typing-foreground: var(--foreground);
 
     --radius-bubble: 25px;

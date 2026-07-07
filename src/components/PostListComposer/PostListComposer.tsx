@@ -15,11 +15,13 @@ type PostListComposerProps = {
 };
 
 /**
- * A bottom-anchored iMessage compose bar (rounded pill "input" + circular send
- * button). Tapping it pops up a list of blog-post links, each rendered as a
+ * A bottom-anchored iMessage compose bar: a single full-width rounded pill
+ * "input" that FLOATS over the page (its own blur + faint translucent fill, no
+ * panel/bar behind it). Tapping it pops up a list of blog-post links, each a
  * darker translucent grey outgoing-positioned bubble (the typing-indicator
- * tone) whose heading is the link — an iMessage-flavored blog index. Driven by
- * the placeholder post source until Prismic is wired.
+ * tone) whose heading is the link — an iMessage-flavored blog index. While the
+ * list is open the page behind is dimmed, and choosing a link closes the list.
+ * Driven by the placeholder post source until Prismic is wired.
  */
 export const PostListComposer = ({
     posts = PLACEHOLDER_POSTS,
@@ -28,6 +30,7 @@ export const PostListComposer = ({
 }: PostListComposerProps) => {
     const [open, setOpen] = useState(defaultOpen);
     const toggle = () => setOpen((v) => !v);
+    const close = () => setOpen(false);
 
     return (
         // NOTE: no `pointer-events-none` on this wrapper. iOS Safari does not
@@ -37,65 +40,51 @@ export const PostListComposer = ({
         // closed the wrapper only spans the bar itself (the list collapses to
         // `max-h-0`), so it doesn't need to let taps pass through.
         <div className='fixed inset-x-0 bottom-0 z-50'>
-            {/* Tap-away overlay to close the sheet. */}
-            {open && (
-                <button
-                    type='button'
-                    aria-label='Close post list'
-                    onClick={() => setOpen(false)}
-                    className='fixed inset-0 -z-10 cursor-default'
-                />
-            )}
+            {/* Tap-away scrim that also DIMS the page behind the open list.
+                ALWAYS mounted (with pointer-events off + opacity 0 when closed)
+                so it FADES in/out; sits above the page content but below the
+                list + floating pill (negative z within this z-50 context). */}
+            <button
+                type='button'
+                aria-label='Close post list'
+                onClick={close}
+                tabIndex={open ? 0 : -1}
+                aria-hidden={!open}
+                className={clsx(
+                    'fixed inset-0 -z-10 cursor-default bg-black/65 transition-opacity duration-300 ease-out',
+                    open ? 'opacity-100' : 'pointer-events-none opacity-0'
+                )}
+            />
 
-            {/* The post list, rising above the compose bar. */}
+            {/* The post list, fading in/out above the compose bar. */}
             <div
                 className={clsx(
-                    'overflow-hidden transition-[max-height] duration-300 ease-out',
-                    open ? 'max-h-[65vh]' : 'max-h-0'
+                    'transition-opacity duration-300 ease-out',
+                    open ? 'opacity-100' : 'pointer-events-none opacity-0'
                 )}
             >
                 <div className='mx-auto max-w-xl px-5 pt-5 pb-2'>
                     <div className='max-h-[58vh] overflow-y-auto pr-0.5'>
-                        <PostLinkList posts={posts} />
+                        <PostLinkList posts={posts} onLinkClick={close} />
                     </div>
                 </div>
             </div>
 
-            {/* The compose bar. Pad the bottom past the iOS home indicator /
-                bottom toolbar (safe-area inset) so the controls aren't tucked
-                under system UI where taps get swallowed. */}
-            <div className='border-t border-border bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur'>
-                <div className='mx-auto flex max-w-xl items-center gap-2 px-4 py-2.5'>
-                    <button
-                        type='button'
-                        onClick={toggle}
-                        className='flex-1 touch-manipulation rounded-full border border-border px-4 py-2 text-left text-base text-muted-foreground transition-colors hover:border-muted-foreground/40'
-                    >
-                        {placeholder}
-                    </button>
+            {/* The compose bar has NO panel/frame — the full-width pill itself
+                floats over the page (its own blur + faint fill keep it legible),
+                reading as a hovering control, not a docked bar. Pad the bottom
+                past the iOS home indicator / bottom toolbar (safe-area inset) so
+                it isn't tucked under system UI where taps get swallowed. */}
+            <div className='pb-[env(safe-area-inset-bottom)]'>
+                <div className='mx-auto max-w-xl px-4 py-2.5'>
                     <button
                         type='button'
                         onClick={toggle}
                         aria-expanded={open}
                         aria-label={open ? 'Hide posts' : 'Show posts'}
-                        className='flex size-9 shrink-0 touch-manipulation items-center justify-center rounded-full bg-imessage-sent text-imessage-sent-foreground transition-transform active:scale-95'
+                        className='w-full touch-manipulation rounded-full border border-border bg-background/60 px-4 py-2 text-left text-base text-muted-foreground backdrop-blur transition-colors hover:border-muted-foreground/40'
                     >
-                        <svg
-                            viewBox='0 0 24 24'
-                            fill='none'
-                            stroke='currentColor'
-                            strokeWidth='2.5'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            className={clsx(
-                                'size-5 transition-transform duration-300',
-                                open && 'rotate-180'
-                            )}
-                            aria-hidden
-                        >
-                            <path d='M12 19V5' />
-                            <path d='M6 11l6-6 6 6' />
-                        </svg>
+                        {placeholder}
                     </button>
                 </div>
             </div>

@@ -32,6 +32,13 @@ type MediaMessageProps = {
      * standalone attachments.
      */
     standalone?: boolean;
+    /**
+     * Render the attachment at a larger, video-appropriate width (fills the
+     * conversation column instead of the default ~75% cap). Used for oEmbed
+     * video embeds so they read comfortably; stays responsive
+     * (`max-width: 100%`) and the child preserves its own aspect ratio.
+     */
+    wide?: boolean;
     revealOnScroll?: boolean;
     className?: string;
 };
@@ -49,6 +56,7 @@ export const MediaMessage = ({
     caption,
     grouped = false,
     tail = true,
+    wide = false,
     revealOnScroll = true,
     className,
 }: MediaMessageProps) => {
@@ -66,7 +74,12 @@ export const MediaMessage = ({
             style={{ opacity: shown ? REVEALED_OPACITY : HIDDEN_OPACITY }}
         >
             <div className={clsx('flex', outgoing ? 'justify-end' : 'justify-start')}>
-                <figure className={clsx('max-w-[85%] sm:max-w-[75%]', className)}>
+                <figure
+                    className={clsx(
+                        wide ? 'w-full max-w-full' : 'max-w-[85%] sm:max-w-[75%]',
+                        className
+                    )}
+                >
                     <DynamicBubble
                         direction={direction}
                         variant='media'

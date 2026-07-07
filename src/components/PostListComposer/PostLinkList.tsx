@@ -6,50 +6,57 @@ import type { BlogPostLink } from '@/lib/posts';
  * A single post link as a darker, translucent grey bubble (the iMessage
  * typing-indicator tone) in the outgoing (right) position — distinct from an
  * incoming message. Post-link bubbles are ALWAYS tail-less (they read as a
- * list/menu, not sent messages); grouping only tightens spacing and rounds the
- * connecting corners.
+ * list/menu, not sent messages) and each keeps its OWN full rounded corners —
+ * no grouped/connecting-corner treatment between stacked links. Only the visible
+ * BUBBLE is the click target: the `Link` is `pointer-events-none` and the bubble
+ * `pointer-events-auto`, so pointer events land only on the bubble (the empty row
+ * area is click-through and does nothing) while keyboard focus still works. It
+ * uses the darkened `typing` tone so it reads as a distinct, darker menu item. Choosing it also closes the sheet via
+ * `onLinkClick`.
  */
 export const PostLinkBubble = ({
     post,
-    grouped = false,
-    groupedBelow = false,
+    onLinkClick,
 }: {
     post: BlogPostLink;
-    /** A link sits above (tightens the top, rounds the top connecting corner). */
-    grouped?: boolean;
-    /** A link sits below (rounds the bottom connecting corner). */
-    groupedBelow?: boolean;
+    /** Called when the link is chosen (used to close the composer sheet). */
+    onLinkClick?: () => void;
 }) => (
-    <ChatBubble
-        variant='sent'
-        tone='typing'
-        tail={false}
-        grouped={grouped}
-        groupedBelow={groupedBelow}
+    <Link
+        href={`/blog/${post.slug}`}
+        onClick={onLinkClick}
+        className='pointer-events-none block font-medium'
     >
-        <Link
-            href={`/blog/${post.slug}`}
-            className='block font-medium transition-opacity hover:opacity-70'
+        <ChatBubble
+            variant='sent'
+            tone='typing'
+            tail={false}
+            className='pointer-events-auto'
         >
             {post.title}
-        </Link>
-    </ChatBubble>
+        </ChatBubble>
+    </Link>
 );
 
 /**
- * A grouped, ALWAYS tail-less stack of post-link bubbles — tight spacing and
- * flattened connecting corners (round on the outer edges), reading as a menu
- * of links rather than sent messages. Shared by the compose-bar sheet and the
- * in-thread recirculation links.
+ * An ALWAYS tail-less stack of post-link bubbles reading as a menu of links
+ * rather than sent messages — each its own rounded bubble (no connecting
+ * corners). Shared by the compose-bar sheet and the in-thread recirculation
+ * links. Passing `onLinkClick` lets a caller (the composer) close on navigate.
  */
-export const PostLinkList = ({ posts }: { posts: BlogPostLink[] }) => (
+export const PostLinkList = ({
+    posts,
+    onLinkClick,
+}: {
+    posts: BlogPostLink[];
+    onLinkClick?: () => void;
+}) => (
     <>
-        {posts.map((post, i) => (
+        {posts.map((post) => (
             <PostLinkBubble
                 key={post.slug}
                 post={post}
-                grouped={i > 0}
-                groupedBelow={i < posts.length - 1}
+                onLinkClick={onLinkClick}
             />
         ))}
     </>

@@ -82,10 +82,14 @@ e.g. older iOS Safari). framer-motion is removed. Keep the splash JS-free.
 
 **Not linked from the live site, but the blog pages exist:** the `/` splash is
 still the only thing the live site links to, but both blog routes are mounted:
-- `/blog` (`src/app/blog/page.tsx`) — the INDEX, rendered as an iMessage
-  compose bar: `PostListComposer` pops up the post list as tail-less link
-  bubbles. Wired to `getAllPosts()` mapped to `BlogPostLink` (`src/lib/posts.ts`),
-  falling back to `PLACEHOLDER_POSTS` when Prismic is unwired (query returns `[]`).
+- The **recirculation composer** (`PostListComposer`) renders on the GLOBAL
+  layout (`src/app/layout.tsx`), so it floats over EVERY route (sibling of
+  `{children}`, like `PrismicPreview`). The layout is an async server component
+  that calls `getAllPosts()`, maps to `BlogPostLink` (`src/lib/posts.ts`), and
+  falls back to `PLACEHOLDER_POSTS` when Prismic is unwired. It is NOT rendered
+  per-page (would double up). Closed by default site-wide.
+- `/blog` (`src/app/blog/page.tsx`) — the INDEX, now just an empty `<main>`
+  shell (the composer is global; don't re-add it here).
 - `/blog/[uid]` (`src/app/blog/[uid]/page.tsx`) — a single post, rendered as an
   iMessage conversation via `src/components/BlogPost`.
 
@@ -95,16 +99,18 @@ back to placeholders — the build stays green. Once a real repo is wired the
 same code serves content. `src/prismicio.ts` keeps the `blog_post` route mapping.
 - **`BlogPost` render mapping** (`src/components/BlogPost`) — matches develop's
   schema (`title` + `image`, **no subtitle**): `title` → outgoing
-  (`HeadingMessage`), `image` → outgoing media bubble
-  (`MediaMessage direction='outgoing'`). The body ARRIVES as incoming bubbles:
-  each `rich_text` slice is split PER top-level block by the component-local
-  `richTextToBubbles` (NOT the shared `ConversationText`, which sends headings
-  outgoing) — paragraphs/headings → one `TextMessage` each (inline formatting
-  kept); a blank line (empty paragraph) is dropped but forces a group split; a
-  contiguous run of same-type list items collapses into ONE bubble with a native
-  `<ul>`/`<ol>` (`list-disc/list-decimal pl-5`, inline markers); images/embeds →
-  standalone `MediaMessage`. Other slice types (`heading`) stay one bubble.
-  Verified via `BlogPost.stories.tsx`.
+  (`HeadingMessage`) wrapping an **`<h1>`** (the page's a11y h1), `image` →
+  outgoing media bubble (`MediaMessage direction='outgoing'`). The body is split
+  PER top-level block by the component-local `richTextToBubbles` (NOT the shared
+  `ConversationText`): rich-text **headings → OUTGOING** (`HeadingMessage`),
+  each wrapping its correct semantic **`<h1>`–`<h6>`** element (a11y; the side
+  flip breaks grouping on its own); paragraphs → incoming `TextMessage` (inline
+  formatting kept); a blank line (empty paragraph) is dropped but forces a group
+  split; a contiguous run of same-type list items collapses into ONE bubble with
+  a native `<ul>`/`<ol>` (`list-disc/list-decimal pl-5`); images/embeds →
+  standalone `MediaMessage` (embeds `wide` + 16:9-locked container). Other slice
+  types (the `heading` slice) stay one incoming bubble. Verified via
+  `BlogPost.stories.tsx`.
 - **`MediaMessage` takes `direction`** (default `incoming`); `outgoing`
   right-aligns it and gives it the blue-side tail.
 - **Grouping hints** — `Message`/`MediaMessage` accept `startsGroup` and
@@ -122,13 +128,28 @@ was also built and then fully reverted. `src/lib/posts.ts`
 `PostListComposer` post list in Storybook.
 
 - **`PostListComposer`** (`src/components/PostListComposer`) — a bottom-fixed
-  iMessage compose bar (pill + send button) that pops up the blog-post list.
-  `PostLinkList`/`PostLinkBubble` render each post heading as a link bubble:
-  darker translucent grey (`tone='typing'`) in the OUTGOING (right) position,
-  and **ALWAYS tail-less** (`tail={false}`, including the bottom item) so they
-  read as a list/menu, not sent messages — still grouped (tight spacing,
-  rounded connecting corners). Reused for the in-thread recirculation links.
-  Driven by **`src/lib/posts.ts`** (`PLACEHOLDER_POSTS` / `BlogPostLink`), the
+  iMessage compose bar that pops up the blog-post list. It is a **single
+  full-width pill** (NO send button) that itself FLOATS — no panel/bar behind
+  it; the blur lives ON the pill (`bg-background/60 backdrop-blur`) so it stays
+  legible over content. Tapping the pill toggles the list. While the list is
+  **open the page behind is dimmed** by the tap-away scrim (`bg-black/65`, above
+  content / below the list+pill) — the scrim is ALWAYS mounted and FADES in/out
+  via `transition-opacity` (pointer-events off + `opacity-0` when closed), and
+  choosing a link **closes** the sheet
+  (`onLinkClick` → `setOpen(false)`, threaded through `PostLinkList`/
+  `PostLinkBubble`). Rendered globally (see above). `PostLinkList`/
+  `PostLinkBubble` render each post heading as a link bubble: the darker
+  translucent grey `typing` tone in the OUTGOING (right) position, **ALWAYS
+  tail-less**, each its OWN fully rounded bubble — **no grouped connecting
+  corners**. Only the **visible BUBBLE is the click target** — the `Link` is
+  `pointer-events-none` and the `ChatBubble` is `pointer-events-auto`, so pointer
+  events land only on the bubble (the empty row area is click-through) while the
+  bubble keeps its correct DynamicBubble sizing and keyboard focus still works.
+  Translucency comes ENTIRELY from the theme token
+  `--color-imessage-typing` (`rgba(118,118,128,0.9)` — deliberately darkened) —
+  there are NO `opacity-*` classes on the bubble. Reused for
+  the in-thread recirculation links. Driven by **`src/lib/posts.ts`**
+  (`PLACEHOLDER_POSTS` / `BlogPostLink`), the
   placeholder source while Prismic is unwired.
 - Bubble color/corner knobs on `ChatBubble`/`DynamicBubble`: `tone` decouples
   COLOR from `variant`/`direction` (`tone='typing'` = `--color-imessage-typing`,
@@ -163,7 +184,8 @@ tokens (extends the theme — does not fork it).
   before, so no flash); `variant='media'` applies the same clip via
   `clip-path: url(#id)` so media **fills the bubble and is clipped to the
   silhouette, tail included**. Same shape for both. Content font is responsive:
-  `text-base` (≈16px mobile) → `md:text-xl`.
+  `text-base` (≈16px mobile) → `md:text-xl` — the SAME size for incoming and
+  outgoing bubbles.
   - **Min-width hug (text):** measures a tight width so bubbles hug their text.
     For multi-line it binary-searches the SMALLEST width that keeps the minimal
     line count (balances the lines, kills ragged whitespace). The max width is
@@ -182,11 +204,11 @@ tokens (extends the theme — does not fork it).
   **grouping** from the child sequence: consecutive same-side messages form a
   run, and it passes each child `tail` (true only on the run's LAST message)
   and `grouped` (a same-side message precedes it) via `cloneElement`. Grouped
-  bubbles drop the tail (except the last), tighten spacing, and round the
-  tail-side connecting corners to `GROUPED_RADIUS` — partway between the body
-  radius and a squared corner (`BubbleClip` `flattenTop`/`flattenBottom`,
-  clamped to the bubble geometry; note a single-line bubble's body radius is
-  already ~height/2, so values at/above that render the same). It reads each
+  bubbles drop the tail (except the last) and tighten spacing, but keep the
+  FULL corner radius — `GROUPED_RADIUS = BUBBLE_RADIUS`, so `flattenTop`/
+  `flattenBottom` no longer reduce the connecting corners; every bubble's corners
+  are consistent (grouped runs read as separate fully-rounded bubbles with tight
+  spacing). It reads each
   child's side from the component type
   (`HeadingMessage`=outgoing, `TextMessage`/`MediaMessage`=incoming) or a
   `Message`'s `direction`. **Don't hand-set `tail`/`grouped`** — the thread

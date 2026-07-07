@@ -28,9 +28,10 @@ const headingField: RichTextField = [
 ];
 
 /**
- * A rich-text slice body that exercises the grouping refinements:
- * - two paragraphs with no blank line between them → grouped run (one with a
- *   bold span, one with a link);
+ * A rich-text slice body that exercises the grouping + heading behaviour:
+ * - a heading node → an OUTGOING (sent) bubble with a semantic <h2>;
+ * - two paragraphs with no blank line between them → grouped incoming run (one
+ *   with a bold span, one with a link);
  * - a blank line (empty paragraph) → group break: the next paragraph starts a
  *   fresh run;
  * - another blank line, then a bulleted list and a numbered list, each
@@ -39,6 +40,7 @@ const headingField: RichTextField = [
  * - a closing paragraph.
  */
 const richBody: RichTextField = [
+    { type: 'heading2', text: 'How the rewrite went', spans: [] },
     {
         type: 'paragraph',
         text: 'Rewrote heyscott on the modern stack this week.',
