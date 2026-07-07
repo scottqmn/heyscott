@@ -175,6 +175,25 @@ tokens (extends the theme — does not fork it).
   because the captain wanted an IO wrapper specifically — it does NOT replace
   `useScrollReveal` (that stays the production reveal). Use `RevealOnView` when
   you want observer semantics (thresholds, re-reveal via `once={false}`).
+- **Reveal QUEUE** (`revealQueue.tsx`): a path-change-driven reveal store for a
+  post's conversation. `RevealQueueProvider` takes `postKey` (the route/uid) +
+  `messageIds` (the post's ordered message ids) and holds a head pointer
+  (`revealedCount`). A message reveals when it's at the head AND scrolls into
+  view, which advances the head — so messages reveal **progressively and in
+  order**, not all at once. Changing `postKey` resets the head to 0
+  **synchronously** (derived from a `{key,count}` state, no effect/flash) — a
+  half-scrolled previous post is CLEARED and the queue REFILLS with the new
+  post's data, so nothing stale carries over on navigation. Respects
+  `prefers-reduced-motion` (whole queue reveals instantly). WIRING: `Message`
+  takes an optional `queueId` — when set AND a provider is above, its reveal
+  timing comes from the queue instead of `useScrollReveal` (fully backward
+  compatible; `queueId` is inert with no provider). So a blog post wraps its
+  `MessageThread` in `RevealQueueProvider` and gives each `HeadingMessage`/
+  `TextMessage`/`MediaMessage` a `queueId` (grouping still works — the queue is
+  timing-only, the message stays the direct `MessageThread` child). `QueuedReveal`
+  is the standalone wrapper (RevealOnView animation, queue timing) for non-Message
+  children. Demo + headless-verified in `RevealQueue.stories.tsx`. This is the
+  reveal-timing layer that the `BlogPost` render (PR #4) hooks onto.
 - **`@chenglou/pretext` assessment (not used):** a legit canvas-based text
   measurement/balancing lib by chenglou, but `0.0.x` (brand-new, unstable API)
   and its canvas measurement only approximates the browser's real line-breaking

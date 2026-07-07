@@ -8,15 +8,13 @@ import {
     type ElementType,
     type ReactNode,
 } from 'react';
-import { REVEAL_ROOT_MARGIN } from './constants';
-
-/** Entrance duration/easing — matches the splash `splashIn` feel (globals.css). */
-const REVEAL_DURATION_MS = 500;
-const REVEAL_EASING = 'ease-out';
-
-/** Hidden (pre-reveal) state: faded + nudged down and very slightly shrunk. */
-const HIDDEN_TRANSFORM = 'translateY(12px) scale(0.98)';
-const REVEALED_TRANSFORM = 'translateY(0) scale(1)';
+import {
+    REVEAL_DURATION_MS,
+    REVEAL_EASING,
+    REVEAL_HIDDEN_TRANSFORM,
+    REVEAL_REVEALED_TRANSFORM,
+    REVEAL_ROOT_MARGIN,
+} from './constants';
 
 export type RevealOnViewProps = {
     children: ReactNode;
@@ -133,7 +131,9 @@ export const RevealOnView = ({
         ? {}
         : {
               opacity: revealed ? 1 : 0,
-              transform: revealed ? REVEALED_TRANSFORM : HIDDEN_TRANSFORM,
+              transform: revealed
+                  ? REVEAL_REVEALED_TRANSFORM
+                  : REVEAL_HIDDEN_TRANSFORM,
               transition: `opacity ${REVEAL_DURATION_MS}ms ${REVEAL_EASING} ${delay}ms, transform ${REVEAL_DURATION_MS}ms ${REVEAL_EASING} ${delay}ms`,
               willChange: revealed ? undefined : 'opacity, transform',
           };
