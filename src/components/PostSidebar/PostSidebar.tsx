@@ -92,6 +92,23 @@ const ListGlyph = () => (
     </svg>
 );
 
+/** An X glyph for the mobile full-screen close button. */
+const CloseGlyph = () => (
+    <svg
+        aria-hidden='true'
+        viewBox='0 0 24 24'
+        width={22}
+        height={22}
+        fill='none'
+        stroke='currentColor'
+        strokeWidth={2}
+        strokeLinecap='round'
+    >
+        <line x1='6' y1='6' x2='18' y2='18' />
+        <line x1='18' y1='6' x2='6' y2='18' />
+    </svg>
+);
+
 /** 44px (50px on mobile) circular avatar: cover image, else title monogram. */
 const RowAvatar = ({ post }: { post: SidebarPost }) =>
     post.image ? (
@@ -171,9 +188,10 @@ const PostRow = ({
  * query shows every post, no match shows a tasteful empty state.
  *
  * It's a fixed panel that overlays the left edge without reflowing `{children}`.
- * **Persistent on desktop** (`md+`); on mobile it collapses to a **drawer**
- * (direction 1b: larger type, 50px avatars) toggled from a top-left button, with
- * a tap-away scrim; choosing a row closes it. Colors come from the
+ * **Persistent on desktop** (`md+`, the 334px rail). On **mobile** the open
+ * sidebar is a **full-viewport overlay** — the iMessage Messages list screen
+ * (direction 1b: full-screen list, larger type, 50px avatars): a top-left button
+ * opens it, the header X (or tapping a post) closes it. Colors come from the
  * `--sidebar-*` design tokens (themed light/dark in `globals.css`).
  */
 export const PostSidebar = ({
@@ -219,25 +237,17 @@ export const PostSidebar = ({
                 <ListGlyph />
             </button>
 
-            {/* Tap-away scrim behind the open drawer (mobile only). Always
-                mounted so it FADES; pointer-events off + opacity 0 when closed. */}
-            <button
-                type='button'
-                aria-label='Close posts'
-                onClick={close}
-                tabIndex={open ? 0 : -1}
-                aria-hidden={!open}
-                className={clsx(
-                    'fixed inset-0 z-40 cursor-default bg-black/65 transition-opacity duration-300 ease-out md:hidden',
-                    open ? 'opacity-100' : 'pointer-events-none opacity-0'
-                )}
-            />
-
+            {/* On MOBILE the open sidebar is a FULL-VIEWPORT overlay — the
+                iMessage Messages list screen (design 1b), not a side drawer: it
+                covers the whole screen (`w-full`, no scrim needed since nothing
+                shows behind it) and you tap a post to open it, or the header X to
+                close. On DESKTOP it's the persistent 334px rail (`md:w-[334px]`,
+                always visible via `md:translate-x-0`). */}
             <aside
                 id='post-sidebar'
                 aria-label='Blog posts'
                 className={clsx(
-                    'fixed inset-y-0 left-0 z-40 flex w-[334px] max-w-[85%] flex-col border-r border-[var(--sidebar-separator)] bg-[var(--sidebar-bg)] transition-transform duration-300 ease-out md:translate-x-0',
+                    'fixed inset-y-0 left-0 z-40 flex w-full flex-col bg-[var(--sidebar-bg)] transition-transform duration-300 ease-out md:w-[334px] md:translate-x-0 md:border-r md:border-[var(--sidebar-separator)]',
                     open ? 'translate-x-0' : '-translate-x-full'
                 )}
             >
@@ -246,9 +256,19 @@ export const PostSidebar = ({
                     <h2 className='text-[30px] font-bold tracking-[-0.03em] text-[var(--sidebar-primary)] md:text-[22px] md:tracking-[-0.02em]'>
                         Posts
                     </h2>
+                    {/* Close the full-screen overlay (mobile only). */}
+                    <button
+                        type='button'
+                        onClick={close}
+                        aria-label='Close posts'
+                        className='flex h-[30px] w-[30px] items-center justify-center text-[var(--sidebar-accent)] md:hidden'
+                    >
+                        <CloseGlyph />
+                    </button>
+                    {/* Decorative compose pencil (desktop rail only). */}
                     <span
                         aria-hidden='true'
-                        className='flex h-[30px] w-[30px] items-center justify-center text-[var(--sidebar-accent)]'
+                        className='hidden h-[30px] w-[30px] items-center justify-center text-[var(--sidebar-accent)] md:flex'
                     >
                         <PencilGlyph />
                     </span>
@@ -274,7 +294,7 @@ export const PostSidebar = ({
                     compose pill on narrow screens. */}
                 <nav
                     aria-label='Posts'
-                    className='min-h-0 flex-1 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-4'
+                    className='min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-4'
                 >
                     {filtered.length > 0 ? (
                         filtered.map((post) => (

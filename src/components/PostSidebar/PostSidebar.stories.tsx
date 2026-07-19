@@ -30,10 +30,12 @@ const Frame = ({
 }) => (
     <div
         data-theme={theme}
-        className='min-h-[660px]'
+        className='min-h-[660px] overflow-hidden'
         style={{ background: 'var(--sidebar-bg)' }}
     >
-        <div className='space-y-3 p-8 pl-[360px] text-[var(--sidebar-secondary)]'>
+        {/* Desktop-only filler behind the 334px rail; on mobile the sidebar is
+            a full-screen overlay so there's nothing to show behind it. */}
+        <div className='hidden space-y-3 p-8 pl-[360px] text-[var(--sidebar-secondary)] md:block'>
             <p>Page content sits behind the sidebar.</p>
             <p>The 334px panel overlays the left edge without reflowing it.</p>
         </div>
@@ -88,7 +90,23 @@ export const Dark: Story = {
     ),
 };
 
-/** The mobile drawer, opened (narrow the viewport to see the drawer + scrim). */
-export const DrawerOpen: Story = {
+/**
+ * Mobile, opened — a FULL-SCREEN overlay (the iMessage Messages list, design
+ * 1b), not a side drawer: the posts list covers the whole viewport; tap a post
+ * to open it, or the header X to close. Rendered at a phone viewport.
+ */
+export const MobileFullScreen: Story = {
     args: { defaultOpen: true },
+    parameters: {
+        viewport: {
+            defaultViewport: 'iphone',
+            viewports: {
+                iphone: {
+                    name: 'iPhone',
+                    type: 'mobile',
+                    styles: { width: '390px', height: '812px' },
+                },
+            },
+        },
+    },
 };
