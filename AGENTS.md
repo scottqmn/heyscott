@@ -82,12 +82,15 @@ e.g. older iOS Safari). framer-motion is removed. Keep the splash JS-free.
 
 **Not linked from the live site, but the blog pages exist:** the `/` splash is
 still the only thing the live site links to, but both blog routes are mounted:
-- The **recirculation composer** (`PostListComposer`) renders on the GLOBAL
-  layout (`src/app/layout.tsx`), so it floats over EVERY route (sibling of
+- The **recirculation post index** (`PostSidebar`) + the decorative compose
+  pill (`PostListComposer`) both render on the GLOBAL layout
+  (`src/app/layout.tsx`), so they float over EVERY route (siblings of
   `{children}`, like `PrismicPreview`). The layout is an async server component
   that calls `getAllPosts()`, maps to `BlogPostLink` (`src/lib/posts.ts`), and
-  falls back to `PLACEHOLDER_POSTS` when Prismic is unwired. It is NOT rendered
-  per-page (would double up). Closed by default site-wide.
+  falls back to `PLACEHOLDER_POSTS` when Prismic is unwired — that list feeds the
+  SIDEBAR (the composer takes no posts now). They are NOT rendered per-page
+  (would double up). Sidebar: persistent desktop / drawer mobile (closed by
+  default on mobile).
 - `/blog` (`src/app/blog/page.tsx`) — the INDEX, now just an empty `<main>`
   shell (the composer is global; don't re-add it here).
 - `/blog/[uid]` (`src/app/blog/[uid]/page.tsx`) — a single post, rendered as an
@@ -127,30 +130,42 @@ was also built and then fully reverted. `src/lib/posts.ts`
 (`PLACEHOLDER_POSTS` / `BlogPostLink`) is now just `{title, slug}`, driving the
 `PostListComposer` post list in Storybook.
 
-- **`PostListComposer`** (`src/components/PostListComposer`) — a bottom-fixed
-  iMessage compose bar that pops up the blog-post list. It is a **single
+- **`PostSidebar`** (`src/components/PostSidebar`) — the blog-post index as a
+  left SIDEBAR (the macOS Messages conversation-list column, reused as
+  recirculation nav). Holds a **title-search** field + the post-link bubbles.
+  Search filters the list by title (case-insensitive substring, `useMemo`);
+  empty query shows all, no match shows a tasteful empty state. It's a fixed,
+  translucent blurred panel that OVERLAYS the left edge WITHOUT reflowing
+  `{children}` (same floating spirit as the composer). **Persistent on desktop**
+  (`md:translate-x-0`); on mobile a **collapsible drawer** — a top-left toggle
+  button (`md:hidden`), a tap-away scrim that dims the page (always mounted,
+  fades), and choosing a link closes the drawer (`onLinkClick` → `close`). The
+  search input is `type='search'` + `text-base` (≥16px, so iOS Safari doesn't
+  zoom on focus). Reuses `PostLinkList` for the bubbles; driven by
+  **`src/lib/posts.ts`** (`PLACEHOLDER_POSTS` / `BlogPostLink`). NOTE: placement
+  is a **tasteful default** — the captain's design artifact wouldn't render
+  reliably when this was built (see PR #4); confirm side/appearance against it.
+- **`PostListComposer`** (`src/components/PostListComposer`) — the bottom-fixed
+  iMessage compose pill, now **DECORATIVE**: a real, focusable `<input>` the
+  visitor can type into, but submitting does NOTHING (no send, no navigation) —
+  the payoff comes later. Post links moved to `PostSidebar`. It is a **single
   full-width pill** (NO send button) that itself FLOATS — no panel/bar behind
   it; the blur lives ON the pill (`bg-background/60 backdrop-blur`) so it stays
-  legible over content. Tapping the pill toggles the list. While the list is
-  **open the page behind is dimmed** by the tap-away scrim (`bg-black/65`, above
-  content / below the list+pill) — the scrim is ALWAYS mounted and FADES in/out
-  via `transition-opacity` (pointer-events off + `opacity-0` when closed), and
-  choosing a link **closes** the sheet
-  (`onLinkClick` → `setOpen(false)`, threaded through `PostLinkList`/
-  `PostLinkBubble`). Rendered globally (see above). `PostLinkList`/
-  `PostLinkBubble` render each post heading as a link bubble: the darker
-  translucent grey `typing` tone in the OUTGOING (right) position, **ALWAYS
-  tail-less**, each its OWN fully rounded bubble — **no grouped connecting
-  corners**. Only the **visible BUBBLE is the click target** — the `Link` is
-  `pointer-events-none` and the `ChatBubble` is `pointer-events-auto`, so pointer
-  events land only on the bubble (the empty row area is click-through) while the
-  bubble keeps its correct DynamicBubble sizing and keyboard focus still works.
-  Translucency comes ENTIRELY from the theme token
-  `--color-imessage-typing` (`rgba(118,118,128,0.9)` — deliberately darkened) —
-  there are NO `opacity-*` classes on the bubble. Reused for
-  the in-thread recirculation links. Driven by **`src/lib/posts.ts`**
-  (`PLACEHOLDER_POSTS` / `BlogPostLink`), the
-  placeholder source while Prismic is unwired.
+  legible over content. A plain `<input>` is focusable/typeable with zero client
+  JS, so this is a **server component** (name kept for import stability though it
+  no longer composes a list).
+- **`PostLinkList`** (`src/components/PostListComposer/PostLinkList`) — the
+  post-link bubbles shared by `PostSidebar` and the in-thread recirculation
+  links. `PostLinkList`/`PostLinkBubble` render each post heading as a link
+  bubble: the darker translucent grey `typing` tone in the OUTGOING (right)
+  position, **ALWAYS tail-less**, each its OWN fully rounded bubble — **no
+  grouped connecting corners**. Only the **visible BUBBLE is the click target**
+  — the `Link` is `pointer-events-none` and the `ChatBubble` is
+  `pointer-events-auto`, so pointer events land only on the bubble (the empty row
+  area is click-through) while the bubble keeps its correct DynamicBubble sizing
+  and keyboard focus still works. Translucency comes ENTIRELY from the theme
+  token `--color-imessage-typing` (`rgba(118,118,128,0.9)` — deliberately
+  darkened) — there are NO `opacity-*` classes on the bubble.
 - Bubble color/corner knobs on `ChatBubble`/`DynamicBubble`: `tone` decouples
   COLOR from `variant`/`direction` (`tone='typing'` = `--color-imessage-typing`,
   darker translucent gray, text via `--foreground`, legible in both themes);

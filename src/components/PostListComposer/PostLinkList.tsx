@@ -11,8 +11,8 @@ import type { BlogPostLink } from '@/lib/posts';
  * BUBBLE is the click target: the `Link` is `pointer-events-none` and the bubble
  * `pointer-events-auto`, so pointer events land only on the bubble (the empty row
  * area is click-through and does nothing) while keyboard focus still works. It
- * uses the darkened `typing` tone so it reads as a distinct, darker menu item. Choosing it also closes the sheet via
- * `onLinkClick`.
+ * uses the darkened `typing` tone so it reads as a distinct, darker menu item.
+ * Choosing it also closes the mobile sidebar drawer via `onLinkClick`.
  */
 export const PostLinkBubble = ({
     post,
@@ -41,8 +41,8 @@ export const PostLinkBubble = ({
 /**
  * An ALWAYS tail-less stack of post-link bubbles reading as a menu of links
  * rather than sent messages — each its own rounded bubble (no connecting
- * corners). Shared by the compose-bar sheet and the in-thread recirculation
- * links. Passing `onLinkClick` lets a caller (the composer) close on navigate.
+ * corners). Shared by the {@link PostSidebar} and the in-thread recirculation
+ * links. Passing `onLinkClick` lets a caller close the sidebar drawer on navigate.
  */
 export const PostLinkList = ({
     posts,

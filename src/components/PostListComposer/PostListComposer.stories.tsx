@@ -2,11 +2,10 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { PostListComposer } from './PostListComposer';
 
 /**
- * A bottom-anchored iMessage compose bar (rounded pill "input" + circular send
- * button). Tapping it pops up the blog-post list — each post's heading rendered
- * as a darker, translucent grey outgoing-positioned bubble (the iMessage
- * typing-indicator tone) that links to the post. Driven by the placeholder post
- * source while Prismic is unwired.
+ * A bottom-anchored iMessage compose bar: a single full-width rounded pill text
+ * input that floats over the page. It is **decorative** — focusable and
+ * typeable, but submitting does nothing (post links live in the PostSidebar
+ * now). Kept for the iMessage flavor; behavior comes later.
  */
 const meta = {
     title: 'Blog/PostListComposer',
@@ -24,10 +23,5 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The resting state — just the compose bar pinned to the bottom. */
+/** The resting state — the floating decorative compose pill pinned to the bottom. */
 export const ComposeBar: Story = {};
-
-/** Tapped open — the post-link bubbles rise above the compose bar. */
-export const PostList: Story = {
-    args: { defaultOpen: true },
-};
