@@ -71,6 +71,52 @@
     }
 }
 
+/*
+ * Messages-style sidebar (PostSidebar) — design tokens transcribed verbatim
+ * from the captain's artifact (Messages for Mac two-pane, direction 1a). Light
+ * is the default; dark follows the OS. A `[data-theme]` override wins over the
+ * OS media query (used by Storybook to preview both themes, and available to the
+ * app should it ever add an explicit theme toggle).
+ */
+:root {
+    --sidebar-bg: #ffffff;
+    --sidebar-separator: rgba(60, 60, 67, 0.14);
+    --sidebar-search-bg: #e6e6eb;
+    --sidebar-row-sel: rgba(0, 0, 0, 0.06);
+    --sidebar-primary: #000000;
+    --sidebar-secondary: rgba(60, 60, 67, 0.6);
+    --sidebar-accent: #007aff;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --sidebar-bg: #000000;
+        --sidebar-separator: rgba(255, 255, 255, 0.1);
+        --sidebar-search-bg: #1c1c1e;
+        --sidebar-row-sel: rgba(255, 255, 255, 0.09);
+        --sidebar-primary: #ffffff;
+        --sidebar-secondary: rgba(235, 235, 245, 0.6);
+        --sidebar-accent: #0a84ff;
+    }
+}
+[data-theme='light'] {
+    --sidebar-bg: #ffffff;
+    --sidebar-separator: rgba(60, 60, 67, 0.14);
+    --sidebar-search-bg: #e6e6eb;
+    --sidebar-row-sel: rgba(0, 0, 0, 0.06);
+    --sidebar-primary: #000000;
+    --sidebar-secondary: rgba(60, 60, 67, 0.6);
+    --sidebar-accent: #007aff;
+}
+[data-theme='dark'] {
+    --sidebar-bg: #000000;
+    --sidebar-separator: rgba(255, 255, 255, 0.1);
+    --sidebar-search-bg: #1c1c1e;
+    --sidebar-row-sel: rgba(255, 255, 255, 0.09);
+    --sidebar-primary: #ffffff;
+    --sidebar-secondary: rgba(235, 235, 245, 0.6);
+    --sidebar-accent: #0a84ff;
+}
+
 @layer base {
     html {
         font-family: var(--font-sans);

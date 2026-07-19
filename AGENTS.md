@@ -130,21 +130,30 @@ was also built and then fully reverted. `src/lib/posts.ts`
 (`PLACEHOLDER_POSTS` / `BlogPostLink`) is now just `{title, slug}`, driving the
 `PostListComposer` post list in Storybook.
 
-- **`PostSidebar`** (`src/components/PostSidebar`) — the blog-post index as a
-  left SIDEBAR (the macOS Messages conversation-list column, reused as
-  recirculation nav). Holds a **title-search** field + the post-link bubbles.
-  Search filters the list by title (case-insensitive substring, `useMemo`);
-  empty query shows all, no match shows a tasteful empty state. It's a fixed,
-  translucent blurred panel that OVERLAYS the left edge WITHOUT reflowing
-  `{children}` (same floating spirit as the composer). **Persistent on desktop**
-  (`md:translate-x-0`); on mobile a **collapsible drawer** — a top-left toggle
-  button (`md:hidden`), a tap-away scrim that dims the page (always mounted,
-  fades), and choosing a link closes the drawer (`onLinkClick` → `close`). The
-  search input is `type='search'` + `text-base` (≥16px, so iOS Safari doesn't
-  zoom on focus). Reuses `PostLinkList` for the bubbles; driven by
-  **`src/lib/posts.ts`** (`PLACEHOLDER_POSTS` / `BlogPostLink`). NOTE: placement
-  is a **tasteful default** — the captain's design artifact wouldn't render
-  reliably when this was built (see PR #4); confirm side/appearance against it.
+- **`PostSidebar`** (`src/components/PostSidebar`) — the blog-post index as the
+  macOS **Messages conversation-list column** (matches the captain's design,
+  direction 1a — see `design-reference.md`). A fixed **334px** `<aside>` on the
+  `--sidebar-*` design tokens (opaque `--sidebar-bg`, right border
+  `--separator`) that OVERLAYS the left edge WITHOUT reflowing `{children}`.
+  Contents: a "Posts" header (22px/700) + decorative compose pencil; a **live
+  title-search** pill (a real `type='search'` `<input>` styled as the design's
+  `--search-bg` pill — filters by title, case-insensitive substring `useMemo`;
+  empty query shows all, no match → tasteful empty state); and a scrolling list
+  of **rich rows** — 44px circular **avatar** (Prismic cover `image` via
+  `PrismicNextImage`, else a deterministic-color **monogram** from the title
+  initial) · title (15px, ellipsis) · compact date · 2-line preview clamp · a
+  selected-row highlight (`--row-sel`, from the active `/blog/<slug>` route via
+  `usePathname`, overridable with the `activeSlug` prop). **Persistent on
+  desktop** (`md:translate-x-0`); on mobile a **drawer** (direction 1b: larger
+  type, 50px avatars) toggled from a top-left button with a tap-away scrim;
+  choosing a row closes it. Rows are driven by the richer **`SidebarPost`** type
+  (`src/lib/posts.ts`: `blogPostToSidebar(doc)` maps a `BlogPostDocument` —
+  title, cover `image`, `first_publication_date` since the schema has **no
+  `date` field**, and the first body paragraph as excerpt; falls back to
+  `PLACEHOLDER_SIDEBAR_POSTS` when Prismic is unwired). The `--sidebar-*` tokens
+  live in `globals.css`, themed light/dark via `prefers-color-scheme` with a
+  `[data-theme]` override (used by the Storybook dark story). `BlogPostLink`/
+  `PLACEHOLDER_POSTS` stay for `PostLinkList`.
 - **`PostListComposer`** (`src/components/PostListComposer`) — the bottom-fixed
   iMessage compose pill, now **DECORATIVE**: a real, focusable `<input>` the
   visitor can type into, but submitting does NOTHING (no send, no navigation) —

@@ -1,9 +1,8 @@
 import { PrismicPreview } from '@prismicio/next';
-import { asText } from '@prismicio/client';
 import type { Metadata } from 'next';
 import { PostListComposer } from '@/components/PostListComposer';
 import { PostSidebar } from '@/components/PostSidebar';
-import { PLACEHOLDER_POSTS, type BlogPostLink } from '@/lib/posts';
+import { blogPostToSidebar, PLACEHOLDER_SIDEBAR_POSTS } from '@/lib/posts';
 import { getAllPosts } from '@/lib/prismic/queries';
 import { repositoryName } from '@/prismicio';
 import './globals.css';
@@ -31,15 +30,14 @@ export default async function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    // Feed the site-wide recirculation sidebar. `getAllPosts` swallows fetch
-    // errors and returns [] when Prismic isn't wired, so we fall back to the
-    // placeholder posts and the sidebar still lists something everywhere.
+    // Feed the site-wide recirculation sidebar with rich rows (title, cover
+    // image, date, body preview). `getAllPosts` swallows fetch errors and
+    // returns [] when Prismic isn't wired, so we fall back to the placeholder
+    // posts and the sidebar still lists something everywhere.
     const posts = await getAllPosts();
-    const links: BlogPostLink[] = posts.map((post) => ({
-        title: asText(post.data.title),
-        slug: post.uid,
-    }));
-    const postLinks = links.length > 0 ? links : PLACEHOLDER_POSTS;
+    const sidebarPosts = posts.map(blogPostToSidebar);
+    const postsForSidebar =
+        sidebarPosts.length > 0 ? sidebarPosts : PLACEHOLDER_SIDEBAR_POSTS;
 
     return (
         <html lang='en'>
@@ -47,7 +45,7 @@ export default async function RootLayout({
                 {children}
                 {/* Recirculation post index: a sidebar (persistent desktop /
                     drawer mobile) that floats over every route. */}
-                <PostSidebar posts={postLinks} />
+                <PostSidebar posts={postsForSidebar} />
                 {/* Decorative iMessage compose pill: floats over every route. */}
                 <PostListComposer />
                 <PrismicPreview repositoryName={repositoryName} />
