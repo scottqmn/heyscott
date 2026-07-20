@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { asImageSrc, asText } from '@prismicio/client';
 import { BlogPost } from '@/components/BlogPost';
+import { getDemoPost } from '@/lib/prismic/demoPost';
 import { getAllPosts, getPost } from '@/lib/prismic/queries';
 
 type Params = { uid: string };
@@ -23,7 +24,7 @@ export async function generateMetadata({
     params: Promise<Params>;
 }): Promise<Metadata> {
     const { uid } = await params;
-    const post = await getPost(uid);
+    const post = (await getPost(uid)) ?? getDemoPost(uid);
     if (!post) return {};
 
     const { data } = post;
@@ -49,7 +50,9 @@ export default async function BlogPostPage({
     params: Promise<Params>;
 }) {
     const { uid } = await params;
-    const post = await getPost(uid);
+    // Real Prismic content wins; fall back to a demo post for the placeholder
+    // slugs so the page is viewable while the repo is unwired.
+    const post = (await getPost(uid)) ?? getDemoPost(uid);
     if (!post) notFound();
 
     return <BlogPost post={post} />;
