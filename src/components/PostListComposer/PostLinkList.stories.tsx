@@ -3,11 +3,10 @@ import { PLACEHOLDER_POSTS } from '@/lib/posts';
 import { PostLinkList } from './PostLinkList';
 
 /**
- * Post-link bubbles (the darker translucent-grey typing tone, outgoing side).
- * They GROUP — tight spacing and rounded connecting corners — but are ALWAYS
- * tail-less, including the bottom item, so they read as a list/menu of links
- * rather than sent messages. Outer corners stay round; only the corners where
- * bubbles connect are rounded in.
+ * Post-link bubbles (the darkened translucent-grey typing tone, outgoing side).
+ * Each is its OWN fully rounded, tail-less bubble — no connecting corners
+ * between stacked links — and the whole bubble is the click target, so they read
+ * as a distinct menu of links floating over the page rather than sent messages.
  */
 const meta = {
     title: 'Blog/PostLinkList',
@@ -25,12 +24,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A grouped stack — no tail on any bubble, not even the last. */
-export const Grouped: Story = {
+/** A stack of links — each its own fully rounded, tail-less bubble. */
+export const Stack: Story = {
     args: { posts: PLACEHOLDER_POSTS },
 };
 
-/** A single link — tail-less, fully rounded (nothing to group with). */
+/** A single link — tail-less, fully rounded. */
 export const Single: Story = {
     args: { posts: PLACEHOLDER_POSTS.slice(0, 1) },
 };

@@ -30,13 +30,13 @@ type Story = StoryObj<typeof meta>;
 export const OutgoingRun: Story = {
     render: () => (
         <MessageThread>
-            <Message direction='outgoing' revealOnScroll={false}>
+            <Message direction='outgoing'>
                 First of three
             </Message>
-            <Message direction='outgoing' revealOnScroll={false}>
+            <Message direction='outgoing'>
                 Middle — no tail
             </Message>
-            <Message direction='outgoing' revealOnScroll={false}>
+            <Message direction='outgoing'>
                 Last — this one has the tail
             </Message>
         </MessageThread>
@@ -47,10 +47,10 @@ export const OutgoingRun: Story = {
 export const IncomingRun: Story = {
     render: () => (
         <MessageThread>
-            <Message direction='incoming' revealOnScroll={false}>
+            <Message direction='incoming'>
                 First received
             </Message>
-            <Message direction='incoming' revealOnScroll={false}>
+            <Message direction='incoming'>
                 Second received — tail here
             </Message>
         </MessageThread>
@@ -65,16 +65,16 @@ export const IncomingRun: Story = {
 export const MixedConversation: Story = {
     render: () => (
         <MessageThread>
-            <HeadingMessage revealOnScroll={false}>Hey Scott</HeadingMessage>
-            <HeadingMessage revealOnScroll={false}>
+            <HeadingMessage>Hey Scott</HeadingMessage>
+            <HeadingMessage>
                 Two sent in a row — tail on this one
             </HeadingMessage>
-            <TextMessage revealOnScroll={false}>One reply</TextMessage>
-            <TextMessage revealOnScroll={false}>…and another</TextMessage>
-            <TextMessage revealOnScroll={false}>
+            <TextMessage>One reply</TextMessage>
+            <TextMessage>…and another</TextMessage>
+            <TextMessage>
                 Three received — tail on the last
             </TextMessage>
-            <HeadingMessage revealOnScroll={false}>
+            <HeadingMessage>
                 Back to sent — standalone, keeps its tail
             </HeadingMessage>
         </MessageThread>

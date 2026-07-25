@@ -33,7 +33,9 @@ const AFTER_CORNER = 10; // ::after bottom-inner corner radius
  * NOTE: on single-line bubbles the body radius is already ~height/2, so values
  * at/above that render identically; this sits below it to read as in-between.
  */
-const GROUPED_RADIUS = 14;
+// Grouped messages keep the FULL corner radius — no flattened connecting
+// corners — so every bubble's corners are consistent.
+const GROUPED_RADIUS = BUBBLE_RADIUS;
 
 type Corners = { tl: number; tr: number; br: number; bl: number };
 

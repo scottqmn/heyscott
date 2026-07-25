@@ -43,8 +43,18 @@ bubbles in iMessage blue (`--color-imessage-sent` `#075b97`) / grey
   `NEXT_PUBLIC_PRISMIC_ENVIRONMENT` first, else `slicemachine.config.json`.
 - Custom type `blog_post` in `customtypes/blog_post/` (standard Slice Machine
   location, unlike needless which keeps them under `lib/prismic/customtypes`).
+  Fields: `title` (StructuredText heading1), `image` (Image), a `body` slice
+  zone, and the standard SEO & Metadata tab (`meta_title`/`meta_description`/
+  `meta_image`). The `body` slice zone offers `rich_text` and `heading`. **The
+  schema is owned by `develop` (Prismic Slice Machine) — do NOT edit
+  `customtypes/**`, `src/slices/**/model.json`, `slicemachine.config.json`, or
+  `prismicio-types.d.ts` in feature branches; those land via the customtype
+  sync PRs.** Regenerate types with `pnpm prismic:types` only when the schema
+  itself intentionally changes.
 - Slices in `src/slices/*` (RichText, Heading, Quote, CodeBlock, Images,
-  Divider), registered in `src/slices/index.ts`. Quote renders as an incoming
+  Divider) are all registered in `src/slices/index.ts` as a library; the
+  `blog_post` body slice zone references `rich_text` + `heading`. `RichText`'s
+  model is a single rich text field (`content`). Quote renders as an incoming
   iMessage bubble.
 - Preview routes under `src/app/api/(exit-)preview`, `src/app/slice-simulator`
   (must be `'use client'` — it passes a render fn).
@@ -70,11 +80,48 @@ progressive enhancement. This replaced a framer-motion version that left every
 bubble at `opacity:0` until JS ran (blank page whenever client JS failed to run,
 e.g. older iOS Safari). framer-motion is removed. Keep the splash JS-free.
 
-**Not wired into the live site right now:** the blog pages and the whole
-Tailwind-v4 iMessage component library. The `/blog` index + `/blog/[uid]` post
-routes were REMOVED (only Prismic preview API + `/slice-simulator` tooling
-routes remain besides `/`). `src/prismicio.ts` keeps an inert `blog_post` route
-mapping for when the blog returns.
+**Not linked from the live site, but the blog pages exist:** the `/` splash is
+still the only thing the live site links to, but both blog routes are mounted:
+- The **recirculation post index** (`PostSidebar`) + the decorative compose
+  pill (`PostListComposer`) both render on the GLOBAL layout
+  (`src/app/layout.tsx`), so they float over EVERY route (siblings of
+  `{children}`, like `PrismicPreview`). The layout is an async server component
+  that calls `getAllPosts()`, maps to `BlogPostLink` (`src/lib/posts.ts`), and
+  falls back to `PLACEHOLDER_POSTS` when Prismic is unwired — that list feeds the
+  SIDEBAR (the composer takes no posts now). They are NOT rendered per-page
+  (would double up). Sidebar: persistent desktop / drawer mobile (closed by
+  default on mobile).
+- `/blog` (`src/app/blog/page.tsx`) — the INDEX, now just an empty `<main>`
+  shell (the composer is global; don't re-add it here).
+- `/blog/[uid]` (`src/app/blog/[uid]/page.tsx`) — a single post, rendered as an
+  iMessage conversation via `src/components/BlogPost`.
+
+`getPost`/`getAllPosts` (`src/lib/prismic/queries.ts`) swallow fetch errors, so
+with the placeholder repo the post page just `notFound()`s and the index falls
+back to placeholders — the build stays green. Once a real repo is wired the
+same code serves content. `src/prismicio.ts` keeps the `blog_post` route mapping.
+- **`BlogPost` render mapping** (`src/components/BlogPost`) — matches develop's
+  schema (`title` + `image`, **no subtitle**): `title` → outgoing
+  (`HeadingMessage`) wrapping an **`<h1>`** (the page's a11y h1), `image` →
+  outgoing media bubble (`MediaMessage direction='outgoing'`). The body is split
+  PER top-level block by the component-local `richTextToBubbles` (NOT the shared
+  `ConversationText`): rich-text **headings → OUTGOING** (`HeadingMessage`),
+  each wrapping its correct semantic **`<h1>`–`<h6>`** element (a11y; the side
+  flip breaks grouping on its own); paragraphs → incoming `TextMessage` (inline
+  formatting kept); a blank line (empty paragraph) is dropped but forces a group
+  split; a contiguous run of same-type list items collapses into ONE bubble with
+  a native `<ul>`/`<ol>` (`list-disc/list-decimal pl-5`); images/embeds →
+  standalone `MediaMessage` (embeds `wide` + 16:9-locked container). Other slice
+  types (the `heading` slice) stay one incoming bubble. Verified via
+  `BlogPost.stories.tsx`.
+- **`MediaMessage` takes `direction`** (default `incoming`); `outgoing`
+  right-aligns it and gives it the blue-side tail.
+- **Grouping hints** — `Message`/`MediaMessage` accept `startsGroup` and
+  `standalone` (not rendered; read by `MessageThread`). `MessageThread` forces a
+  group boundary between adjacent messages when the side flips, the later one has
+  `startsGroup` (blank-line split), or either is `standalone` (media reads as its
+  own message). Everything else groups with its same-side neighbour. `sideOf`
+  still derives the side (incoming/outgoing) from component type + `direction`.
 
 **Kept in the codebase (just unmounted):** the entire iMessage component library
 + all Storybook stories — see below. A prior "whole site is one persistent
@@ -83,15 +130,51 @@ was also built and then fully reverted. `src/lib/posts.ts`
 (`PLACEHOLDER_POSTS` / `BlogPostLink`) is now just `{title, slug}`, driving the
 `PostListComposer` post list in Storybook.
 
-- **`PostListComposer`** (`src/components/PostListComposer`) — a bottom-fixed
-  iMessage compose bar (pill + send button) that pops up the blog-post list.
-  `PostLinkList`/`PostLinkBubble` render each post heading as a link bubble:
-  darker translucent grey (`tone='typing'`) in the OUTGOING (right) position,
-  and **ALWAYS tail-less** (`tail={false}`, including the bottom item) so they
-  read as a list/menu, not sent messages — still grouped (tight spacing,
-  rounded connecting corners). Reused for the in-thread recirculation links.
-  Driven by **`src/lib/posts.ts`** (`PLACEHOLDER_POSTS` / `BlogPostLink`), the
-  placeholder source while Prismic is unwired.
+- **`PostSidebar`** (`src/components/PostSidebar`) — the blog-post index as the
+  macOS **Messages conversation-list column** (matches the captain's design,
+  direction 1a — see `design-reference.md`). A fixed **334px** `<aside>` on the
+  `--sidebar-*` design tokens (opaque `--sidebar-bg`, right border
+  `--separator`) that OVERLAYS the left edge WITHOUT reflowing `{children}`.
+  Contents: a "Posts" header (22px/700) + decorative compose pencil; a **live
+  title-search** pill (a real `type='search'` `<input>` styled as the design's
+  `--search-bg` pill — filters by title, case-insensitive substring `useMemo`;
+  empty query shows all, no match → tasteful empty state); and a scrolling list
+  of **rich rows** — 44px circular **avatar** (Prismic cover `image` via
+  `PrismicNextImage`, else a deterministic-color **monogram** from the title
+  initial) · title (15px, ellipsis) · compact date · 2-line preview clamp · a
+  selected-row highlight (`--row-sel`, from the active `/blog/<slug>` route via
+  `usePathname`, overridable with the `activeSlug` prop). **Persistent on
+  desktop** (`md:translate-x-0`); on mobile a **drawer** (direction 1b: larger
+  type, 50px avatars) toggled from a top-left button with a tap-away scrim;
+  choosing a row closes it. Rows are driven by the richer **`SidebarPost`** type
+  (`src/lib/posts.ts`: `blogPostToSidebar(doc)` maps a `BlogPostDocument` —
+  title, cover `image`, `first_publication_date` since the schema has **no
+  `date` field**, and the first body paragraph as excerpt; falls back to
+  `PLACEHOLDER_SIDEBAR_POSTS` when Prismic is unwired). The `--sidebar-*` tokens
+  live in `globals.css`, themed light/dark via `prefers-color-scheme` with a
+  `[data-theme]` override (used by the Storybook dark story). `BlogPostLink`/
+  `PLACEHOLDER_POSTS` stay for `PostLinkList`.
+- **`PostListComposer`** (`src/components/PostListComposer`) — the bottom-fixed
+  iMessage compose pill, now **DECORATIVE**: a real, focusable `<input>` the
+  visitor can type into, but submitting does NOTHING (no send, no navigation) —
+  the payoff comes later. Post links moved to `PostSidebar`. It is a **single
+  full-width pill** (NO send button) that itself FLOATS — no panel/bar behind
+  it; the blur lives ON the pill (`bg-background/60 backdrop-blur`) so it stays
+  legible over content. A plain `<input>` is focusable/typeable with zero client
+  JS, so this is a **server component** (name kept for import stability though it
+  no longer composes a list).
+- **`PostLinkList`** (`src/components/PostListComposer/PostLinkList`) — the
+  post-link bubbles shared by `PostSidebar` and the in-thread recirculation
+  links. `PostLinkList`/`PostLinkBubble` render each post heading as a link
+  bubble: the darker translucent grey `typing` tone in the OUTGOING (right)
+  position, **ALWAYS tail-less**, each its OWN fully rounded bubble — **no
+  grouped connecting corners**. Only the **visible BUBBLE is the click target**
+  — the `Link` is `pointer-events-none` and the `ChatBubble` is
+  `pointer-events-auto`, so pointer events land only on the bubble (the empty row
+  area is click-through) while the bubble keeps its correct DynamicBubble sizing
+  and keyboard focus still works. Translucency comes ENTIRELY from the theme
+  token `--color-imessage-typing` (`rgba(118,118,128,0.9)` — deliberately
+  darkened) — there are NO `opacity-*` classes on the bubble.
 - Bubble color/corner knobs on `ChatBubble`/`DynamicBubble`: `tone` decouples
   COLOR from `variant`/`direction` (`tone='typing'` = `--color-imessage-typing`,
   darker translucent gray, text via `--foreground`, legible in both themes);
@@ -125,7 +208,8 @@ tokens (extends the theme — does not fork it).
   before, so no flash); `variant='media'` applies the same clip via
   `clip-path: url(#id)` so media **fills the bubble and is clipped to the
   silhouette, tail included**. Same shape for both. Content font is responsive:
-  `text-base` (≈16px mobile) → `md:text-xl`.
+  `text-base` (≈16px mobile) → `md:text-xl` — the SAME size for incoming and
+  outgoing bubbles.
   - **Min-width hug (text):** measures a tight width so bubbles hug their text.
     For multi-line it binary-searches the SMALLEST width that keeps the minimal
     line count (balances the lines, kills ragged whitespace). The max width is
@@ -144,11 +228,11 @@ tokens (extends the theme — does not fork it).
   **grouping** from the child sequence: consecutive same-side messages form a
   run, and it passes each child `tail` (true only on the run's LAST message)
   and `grouped` (a same-side message precedes it) via `cloneElement`. Grouped
-  bubbles drop the tail (except the last), tighten spacing, and round the
-  tail-side connecting corners to `GROUPED_RADIUS` — partway between the body
-  radius and a squared corner (`BubbleClip` `flattenTop`/`flattenBottom`,
-  clamped to the bubble geometry; note a single-line bubble's body radius is
-  already ~height/2, so values at/above that render the same). It reads each
+  bubbles drop the tail (except the last) and tighten spacing, but keep the
+  FULL corner radius — `GROUPED_RADIUS = BUBBLE_RADIUS`, so `flattenTop`/
+  `flattenBottom` no longer reduce the connecting corners; every bubble's corners
+  are consistent (grouped runs read as separate fully-rounded bubbles with tight
+  spacing). It reads each
   child's side from the component type
   (`HeadingMessage`=outgoing, `TextMessage`/`MediaMessage`=incoming) or a
   `Message`'s `direction`. **Don't hand-set `tail`/`grouped`** — the thread
@@ -161,39 +245,15 @@ tokens (extends the theme — does not fork it).
   children of `MessageThread` — that's what lets the thread compute grouping for
   the blog. (It no longer uses a single flat `PrismicRichText`, whose opaque
   output the thread couldn't introspect.) Wired into the `RichText` slice.
-- **Scroll reveal** (`useScrollReveal`): ONE-WAY. A message starts at
-  `HIDDEN_OPACITY` (0.25, tunable in `constants.ts`) and fades to full opacity
-  the first time it enters view, then STAYS revealed (observer disconnects — it
-  never fades back out). This hook is the PRODUCTION reveal and is deliberately
-  NOT IntersectionObserver-driven (scroll-geometry check — IO callbacks proved
-  unreliable on iOS Safari momentum scroll; see the hook's doc).
-- **`RevealOnView`** — a separate, clean IntersectionObserver-based reveal
-  WRAPPER (fade + slight slide/scale, matching the splash `splashIn` feel).
-  Wraps arbitrary children; props `threshold`/`rootMargin`/`once`/`delay`/`as`;
-  respects `prefers-reduced-motion`; reveals once by default and mitigates the
-  iOS "already-intersecting on mount" drop with a one-off geometry check. Built
-  because the captain wanted an IO wrapper specifically — it does NOT replace
-  `useScrollReveal` (that stays the production reveal). Use `RevealOnView` when
-  you want observer semantics (thresholds, re-reveal via `once={false}`).
-- **Reveal QUEUE** (`revealQueue.tsx`): a path-change-driven reveal store for a
-  post's conversation. `RevealQueueProvider` takes `postKey` (the route/uid) +
-  `messageIds` (the post's ordered message ids) and holds a head pointer
-  (`revealedCount`). A message reveals when it's at the head AND scrolls into
-  view, which advances the head — so messages reveal **progressively and in
-  order**, not all at once. Changing `postKey` resets the head to 0
-  **synchronously** (derived from a `{key,count}` state, no effect/flash) — a
-  half-scrolled previous post is CLEARED and the queue REFILLS with the new
-  post's data, so nothing stale carries over on navigation. Respects
-  `prefers-reduced-motion` (whole queue reveals instantly). WIRING: `Message`
-  takes an optional `queueId` — when set AND a provider is above, its reveal
-  timing comes from the queue instead of `useScrollReveal` (fully backward
-  compatible; `queueId` is inert with no provider). So a blog post wraps its
-  `MessageThread` in `RevealQueueProvider` and gives each `HeadingMessage`/
-  `TextMessage`/`MediaMessage` a `queueId` (grouping still works — the queue is
-  timing-only, the message stays the direct `MessageThread` child). `QueuedReveal`
-  is the standalone wrapper (RevealOnView animation, queue timing) for non-Message
-  children. Demo + headless-verified in `RevealQueue.stories.tsx`. This is the
-  reveal-timing layer that the `BlogPost` render (PR #4) hooks onto.
+- **No message reveal.** Bubbles render at **FULL opacity by default** — there is
+  NO scroll/opacity reveal on messages (`Message`/`MediaMessage` just render the
+  bubble). This is deliberate: the conversation must be readable **without client
+  JS** (review §7c), and a JS fade-in violated that. The old opacity-reveal
+  machinery — `useScrollReveal`, `RevealOnView`, the `revealQueue`
+  (`RevealQueueProvider`/`QueuedReveal`) and their `constants.ts`
+  (`HIDDEN_OPACITY` etc.) — has been **removed** (it was flagged unused). Tails
+  are still measured client-side by `DynamicBubble` (a rounded-rect stands in
+  without JS), but nothing depends on JS to become *visible*.
 - **`@chenglou/pretext` assessment (not used):** a legit canvas-based text
   measurement/balancing lib by chenglou, but `0.0.x` (brand-new, unstable API)
   and its canvas measurement only approximates the browser's real line-breaking

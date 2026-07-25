@@ -21,7 +21,7 @@ const meta = {
             </div>
         ),
     ],
-    args: { revealOnScroll: false },
+    args: {},
 } satisfies Meta<typeof MediaMessage>;
 
 export default meta;
