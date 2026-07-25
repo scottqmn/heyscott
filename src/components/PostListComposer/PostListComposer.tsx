@@ -1,3 +1,8 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
+import { usePostSidebar } from '@/components/PostSidebar/PostSidebarContext';
+
 type PostListComposerProps = {
     /** Placeholder text shown in the compose-bar pill. */
     placeholder?: string;
@@ -7,18 +12,23 @@ type PostListComposerProps = {
  * A bottom-anchored iMessage compose bar: a single full-width rounded pill
  * text input that FLOATS over the page (its own blur + faint translucent fill,
  * no panel/bar behind it). It is **decorative for now** — a real, focusable
- * input the visitor can type into, but submitting does NOTHING (no send, no
- * navigation); the payoff comes later. Post links live in the {@link PostSidebar}
- * now, not here. The name is kept for import stability even though it no longer
- * composes a list.
+ * input the visitor can type into, but submitting does NOTHING. Post links live
+ * in the {@link PostSidebar} now, not here.
  *
- * NOTE: a plain `<input>` needs no client JS to be focusable/typeable, so this
- * is a server component — keeping the floating chrome free of a JS dependency,
- * in the spirit of the JS-free splash.
+ * SCOPED (D6): the composer belongs to the thread surfaces, so it does NOT
+ * render on `/contact` (which has its own compose bar) and NOT while the mobile
+ * Posts overlay is open (the design's list screen has no composer). It's a
+ * client component only so it can read the route + overlay state; the input
+ * itself is still plain and JS-free.
  */
 export const PostListComposer = ({
     placeholder = 'Read the blog…',
 }: PostListComposerProps) => {
+    const pathname = usePathname();
+    const sidebar = usePostSidebar();
+
+    if (pathname === '/contact' || sidebar?.open) return null;
+
     return (
         // Offset by the 334px rail on md+ so the pill sits in the content area
         // (beside the sidebar), aligned with the main panel — not centered in

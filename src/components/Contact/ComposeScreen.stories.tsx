@@ -2,10 +2,11 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { ComposeScreen } from './ComposeScreen';
 
 /**
- * The design's "New Message" compose screen (→ the `/contact` page): a 56px
- * blurred header ("New Message" + "Done"), then an iMessage "New Message to
- * Scott" mockup (recipient chip · name · email · message · blue send).
- * Decorative for now — the Send is inert (no submit / destination yet).
+ * The design's "New Message" compose screen (→ the `/contact` page), on
+ * `Compose.dc.html`'s three regions: a `From:` email row (with a Required hint /
+ * check circle), a centered empty state, and a docked composer bar whose send
+ * enables once the email validates and the body is non-empty. Decorative — Send
+ * just flips a "Delivered" line.
  */
 const meta = {
     title: 'Blog/ComposeScreen',
