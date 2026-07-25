@@ -50,29 +50,12 @@ export type SidebarPost = {
 };
 
 /**
- * Monogram avatar palette (iOS system-ish accents). A post with no cover image
- * falls back to its title initial on one of these, picked deterministically
- * from the slug so a given post always gets the same color.
+ * Monogram avatar background — the design (D18) uses ONE flat neutral grey for
+ * every avatar, not a per-post color. `seed` is accepted but ignored so the call
+ * sites don't churn.
  */
-const AVATAR_COLORS = [
-    '#ff2d55',
-    '#ff9500',
-    '#ffcc00',
-    '#34c759',
-    '#5ac8fa',
-    '#007aff',
-    '#5856d6',
-    '#af52de',
-];
-
-/** Deterministic monogram background color for a post (stable per `seed`). */
-export const monogramColor = (seed: string): string => {
-    let hash = 0;
-    for (let i = 0; i < seed.length; i += 1) {
-        hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-    }
-    return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-};
+export const MONOGRAM_COLOR = '#a9abb2';
+export const monogramColor = (_seed?: string): string => MONOGRAM_COLOR;
 
 /** The uppercase first letter of a title for the monogram (falls back to “#”). */
 export const monogramInitial = (title: string): string => {
