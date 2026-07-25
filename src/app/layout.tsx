@@ -52,8 +52,20 @@ export default async function RootLayout({
     ];
 
     return (
-        <html lang='en'>
+        // suppressHydrationWarning: the inline script below sets `data-theme` on
+        // <html> before React hydrates (no flash of the wrong theme), so the
+        // attribute legitimately differs from the server HTML.
+        <html lang='en' suppressHydrationWarning>
             <body className='min-h-screen bg-background font-sans text-xl font-light text-foreground'>
+                {/* Apply the persisted theme before paint (no flash of the wrong
+                    theme). No stored preference → no attribute, so CSS falls back
+                    to `prefers-color-scheme`. Runs during parse, before the body
+                    content below it renders. */}
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`,
+                    }}
+                />
                 {/* Shares the mobile Posts-overlay open-state so the blog-post
                     "‹ Posts" header (in `{children}`) can open the sidebar. */}
                 <PostSidebarProvider>

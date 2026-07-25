@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { PLACEHOLDER_SIDEBAR_POSTS, type SidebarPost } from '@/lib/posts';
+import { EditMenu } from './EditMenu';
 import { usePostSidebar } from './PostSidebarContext';
 import { ChevronLeftGlyph, POSTS_MENU_TITLE, PostAvatar } from './parts';
 
@@ -241,16 +242,19 @@ export const PostSidebar = ({
                             {POSTS_MENU_TITLE}
                         </h2>
                     </div>
-                    {/* New message → the compose/contact screen. Real control on
-                        both mobile and desktop (design shows it on the list
-                        header). */}
-                    <Link
-                        href='/contact'
-                        aria-label='New message'
-                        className='flex h-[30px] w-[30px] shrink-0 items-center justify-center text-[var(--sidebar-accent)]'
-                    >
-                        <PencilGlyph />
-                    </Link>
+                    {/* Header controls: the Edit/more menu (settings — theme
+                        toggle for now) + new-message compose pencil → /contact.
+                        Both on mobile and desktop, styled alike (~30px, accent). */}
+                    <div className='flex shrink-0 items-center gap-1'>
+                        <EditMenu />
+                        <Link
+                            href='/contact'
+                            aria-label='New message'
+                            className='flex h-[30px] w-[30px] shrink-0 items-center justify-center text-[var(--sidebar-accent)]'
+                        >
+                            <PencilGlyph />
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Live search — a real input styled as the design's search pill.
