@@ -18,7 +18,7 @@ const meta = {
             </div>
         ),
     ],
-    args: { children: 'Body content, received.', revealOnScroll: false },
+    args: { children: 'Body content, received.' },
 } satisfies Meta<typeof TextMessage>;
 
 export default meta;
@@ -29,11 +29,11 @@ export const Default: Story = {};
 export const Grouped: Story = {
     render: () => (
         <div className='mx-auto max-w-xl'>
-            <TextMessage revealOnScroll={false}>First line</TextMessage>
-            <TextMessage revealOnScroll={false} grouped>
+            <TextMessage>First line</TextMessage>
+            <TextMessage grouped>
                 Second line, grouped tight
             </TextMessage>
-            <TextMessage revealOnScroll={false} grouped>
+            <TextMessage grouped>
                 Third line, still grouped
             </TextMessage>
         </div>
@@ -57,11 +57,11 @@ export const LongLorem: Story = {
 export const HugsAcrossLengths: Story = {
     render: () => (
         <div className='mx-auto max-w-xl'>
-            <HeadingMessage revealOnScroll={false}>{SHORT_TEXT}</HeadingMessage>
-            <TextMessage revealOnScroll={false}>{SHORT_TEXT}</TextMessage>
-            <HeadingMessage revealOnScroll={false}>{MEDIUM_TEXT}</HeadingMessage>
-            <TextMessage revealOnScroll={false}>{MEDIUM_TEXT}</TextMessage>
-            <TextMessage revealOnScroll={false}>{LOREM}</TextMessage>
+            <HeadingMessage>{SHORT_TEXT}</HeadingMessage>
+            <TextMessage>{SHORT_TEXT}</TextMessage>
+            <HeadingMessage>{MEDIUM_TEXT}</HeadingMessage>
+            <TextMessage>{MEDIUM_TEXT}</TextMessage>
+            <TextMessage>{LOREM}</TextMessage>
         </div>
     ),
 };

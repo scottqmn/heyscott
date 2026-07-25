@@ -4,8 +4,6 @@ import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
 import { DynamicBubble } from './DynamicBubble';
 import type { MessageDirection } from './Message';
-import { HIDDEN_OPACITY, REVEALED_OPACITY } from './constants';
-import { useScrollReveal } from './useScrollReveal';
 
 type MediaMessageProps = {
     /** The image / embed / iframe to receive as an attachment. */
@@ -39,7 +37,6 @@ type MediaMessageProps = {
      * (`max-width: 100%`) and the child preserves its own aspect ratio.
      */
     wide?: boolean;
-    revealOnScroll?: boolean;
     className?: string;
 };
 
@@ -57,22 +54,12 @@ export const MediaMessage = ({
     grouped = false,
     tail = true,
     wide = false,
-    revealOnScroll = true,
     className,
 }: MediaMessageProps) => {
-    const { ref, revealed } = useScrollReveal<HTMLDivElement>();
-    const shown = revealed || !revealOnScroll;
     const outgoing = direction === 'outgoing';
 
     return (
-        <div
-            ref={ref}
-            className={clsx(
-                'transition-opacity duration-700 ease-out',
-                grouped ? 'mt-1' : 'mt-3'
-            )}
-            style={{ opacity: shown ? REVEALED_OPACITY : HIDDEN_OPACITY }}
-        >
+        <div className={clsx(grouped ? 'mt-1' : 'mt-3')}>
             <div className={clsx('flex', outgoing ? 'justify-end' : 'justify-start')}>
                 <figure
                     className={clsx(

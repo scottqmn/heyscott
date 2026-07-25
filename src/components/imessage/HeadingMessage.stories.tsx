@@ -18,7 +18,7 @@ const meta = {
             </div>
         ),
     ],
-    args: { children: 'A heading is sent', revealOnScroll: false },
+    args: { children: 'A heading is sent' },
 } satisfies Meta<typeof HeadingMessage>;
 
 export default meta;
@@ -35,10 +35,10 @@ export const WithReceipt: Story = {
 export const NextToBody: Story = {
     render: () => (
         <div className='mx-auto max-w-xl'>
-            <HeadingMessage revealOnScroll={false}>
+            <HeadingMessage>
                 A heading is sent
             </HeadingMessage>
-            <TextMessage revealOnScroll={false}>
+            <TextMessage>
                 And the body reply — same font size and weight.
             </TextMessage>
         </div>

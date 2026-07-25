@@ -17,10 +17,10 @@ const textOf = (content: string) => content.replace(/<[^>]*>/g, '');
  * the page `<h1>`, so the body carries no title bubble. The sent line is
  * OUTGOING (blue); Scott's replies are INCOMING (grey).
  *
- * `revealOnScroll={false}` renders every bubble at FULL opacity straight from
- * the server HTML — preserving the splash's "readable without client JS" intent
- * (no washed-out scroll reveal). The dynamic bubble still shows its text before
- * JS runs (a rounded-rect stands in for the tail until it's measured).
+ * Bubbles render at FULL opacity straight from the server HTML (no scroll/JS
+ * reveal) — preserving the splash's "readable without client JS" intent. The
+ * dynamic bubble still shows its text before JS runs (a rounded-rect stands in
+ * for the tail until it's measured).
  */
 export const HomeConversation = () => (
     <main className='min-h-screen'>
@@ -30,11 +30,11 @@ export const HomeConversation = () => (
                 {MESSAGES[0].map(({ type, content }) => {
                     const text = textOf(content);
                     return type === 'sent' ? (
-                        <HeadingMessage key={text} revealOnScroll={false}>
+                        <HeadingMessage key={text}>
                             {text}
                         </HeadingMessage>
                     ) : (
-                        <TextMessage key={text} revealOnScroll={false}>
+                        <TextMessage key={text}>
                             {text}
                         </TextMessage>
                     );
