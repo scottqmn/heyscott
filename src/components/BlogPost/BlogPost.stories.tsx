@@ -169,6 +169,27 @@ export const Default: Story = {
     args: { post: mockPost },
 };
 
+/**
+ * Mobile — shows the iMessage thread-screen "‹ Posts" back header at the top
+ * (reused from the sidebar menu's title + chevron). Mobile-only; hidden on
+ * desktop where the Posts rail is always visible.
+ */
+export const Mobile: Story = {
+    args: { post: mockPost },
+    parameters: {
+        viewport: {
+            defaultViewport: 'iphone',
+            viewports: {
+                iphone: {
+                    name: 'iPhone',
+                    type: 'mobile',
+                    styles: { width: '390px', height: '812px' },
+                },
+            },
+        },
+    },
+};
+
 /** A minimal post: title only, no image or body slices. */
 export const TitleOnly: Story = {
     args: {

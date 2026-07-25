@@ -110,3 +110,22 @@ export const MobileFullScreen: Story = {
         },
     },
 };
+
+/**
+ * Mobile, closed — only the BARE left-chevron trigger shows (no outline,
+ * background, or blur), top-left. Tapping it opens the full-screen overlay.
+ */
+export const MobileClosed: Story = {
+    parameters: {
+        viewport: {
+            defaultViewport: 'iphone',
+            viewports: {
+                iphone: {
+                    name: 'iPhone',
+                    type: 'mobile',
+                    styles: { width: '390px', height: '812px' },
+                },
+            },
+        },
+    },
+};

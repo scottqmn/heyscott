@@ -8,6 +8,7 @@ import {
     MessageThread,
     TextMessage,
 } from '@/components/imessage';
+import { BlogPostHeader } from './BlogPostHeader';
 import { richTextToBubbles } from './richTextToBubbles';
 
 type BlogPostProps = {
@@ -43,33 +44,40 @@ export const BlogPost = ({ post }: BlogPostProps) => {
     const { title, image, body } = post.data;
 
     return (
-        <main className='min-h-screen py-16'>
-            <MessageThread>
-                {isFilled.richText(title) && (
-                    <HeadingMessage>
-                        {/* The post title is the page's h1 (a11y). */}
-                        <h1>{asText(title)}</h1>
-                    </HeadingMessage>
-                )}
-                {isFilled.image(image) && (
-                    <MediaMessage direction='outgoing'>
-                        <PrismicNextImage field={image} />
-                    </MediaMessage>
-                )}
-                {body.flatMap((slice) =>
-                    startSliceGroup(
-                        slice.slice_type === 'rich_text'
-                            ? richTextToBubbles(slice.primary.content, slice.id)
-                            : [
-                                  <TextMessage key={slice.id}>
-                                      <PrismicRichText
-                                          field={slice.primary.heading}
-                                      />
-                                  </TextMessage>,
-                              ]
-                    )
-                )}
-            </MessageThread>
+        <main className='min-h-screen'>
+            {/* iMessage thread-screen "‹ Posts" back header (mobile only). */}
+            <BlogPostHeader />
+            <div className='py-16'>
+                <MessageThread>
+                    {isFilled.richText(title) && (
+                        <HeadingMessage>
+                            {/* The post title is the page's h1 (a11y). */}
+                            <h1>{asText(title)}</h1>
+                        </HeadingMessage>
+                    )}
+                    {isFilled.image(image) && (
+                        <MediaMessage direction='outgoing'>
+                            <PrismicNextImage field={image} />
+                        </MediaMessage>
+                    )}
+                    {body.flatMap((slice) =>
+                        startSliceGroup(
+                            slice.slice_type === 'rich_text'
+                                ? richTextToBubbles(
+                                      slice.primary.content,
+                                      slice.id
+                                  )
+                                : [
+                                      <TextMessage key={slice.id}>
+                                          <PrismicRichText
+                                              field={slice.primary.heading}
+                                          />
+                                      </TextMessage>,
+                                  ]
+                        )
+                    )}
+                </MessageThread>
+            </div>
         </main>
     );
 };

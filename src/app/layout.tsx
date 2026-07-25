@@ -1,7 +1,7 @@
 import { PrismicPreview } from '@prismicio/next';
 import type { Metadata } from 'next';
 import { PostListComposer } from '@/components/PostListComposer';
-import { PostSidebar } from '@/components/PostSidebar';
+import { PostSidebar, PostSidebarProvider } from '@/components/PostSidebar';
 import { blogPostToSidebar, PLACEHOLDER_SIDEBAR_POSTS } from '@/lib/posts';
 import { getAllPosts } from '@/lib/prismic/queries';
 import { repositoryName } from '@/prismicio';
@@ -42,12 +42,16 @@ export default async function RootLayout({
     return (
         <html lang='en'>
             <body className='min-h-screen bg-background font-sans text-xl font-light text-foreground'>
-                {children}
-                {/* Recirculation post index: a sidebar (persistent desktop /
-                    drawer mobile) that floats over every route. */}
-                <PostSidebar posts={postsForSidebar} />
-                {/* Decorative iMessage compose pill: floats over every route. */}
-                <PostListComposer />
+                {/* Shares the mobile Posts-overlay open-state so the blog-post
+                    "‹ Posts" header (in `{children}`) can open the sidebar. */}
+                <PostSidebarProvider>
+                    {children}
+                    {/* Recirculation post index: a sidebar (persistent desktop /
+                        full-screen overlay mobile) that floats over every route. */}
+                    <PostSidebar posts={postsForSidebar} />
+                    {/* Decorative iMessage compose pill: floats over every route. */}
+                    <PostListComposer />
+                </PostSidebarProvider>
                 <PrismicPreview repositoryName={repositoryName} />
             </body>
         </html>

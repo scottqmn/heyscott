@@ -11,6 +11,8 @@ import {
     PLACEHOLDER_SIDEBAR_POSTS,
     type SidebarPost,
 } from '@/lib/posts';
+import { usePostSidebar } from './PostSidebarContext';
+import { ChevronLeftGlyph, POSTS_MENU_TITLE } from './parts';
 
 type PostSidebarProps = {
     /** Rich posts to list. Defaults to the placeholder source (Prismic pending). */
@@ -71,24 +73,6 @@ const PencilGlyph = () => (
     >
         <path d='M12 20h9' />
         <path d='M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z' />
-    </svg>
-);
-
-/** A three-bar list glyph for the mobile open button. */
-const ListGlyph = () => (
-    <svg
-        aria-hidden='true'
-        viewBox='0 0 24 24'
-        width={20}
-        height={20}
-        fill='none'
-        stroke='currentColor'
-        strokeWidth={2}
-        strokeLinecap='round'
-    >
-        <line x1='4' y1='7' x2='20' y2='7' />
-        <line x1='4' y1='12' x2='20' y2='12' />
-        <line x1='4' y1='17' x2='20' y2='17' />
     </svg>
 );
 
@@ -200,15 +184,25 @@ export const PostSidebar = ({
     defaultQuery = '',
     activeSlug,
 }: PostSidebarProps) => {
-    const [open, setOpen] = useState(defaultOpen);
-    const [query, setQuery] = useState(defaultQuery);
+    // Open-state is shared via context when a provider is mounted (the app, so
+    // the blog-post "‹ Posts" header can open this overlay); otherwise it falls
+    // back to local state (e.g. Storybook, where `defaultOpen` seeds it).
+    const shared = usePostSidebar();
+    const [localOpen, setLocalOpen] = useState(defaultOpen);
+    const open = shared ? shared.open : localOpen;
+    const setOpen = shared ? shared.setOpen : setLocalOpen;
     const close = () => setOpen(false);
+
+    const [query, setQuery] = useState(defaultQuery);
 
     const pathname = usePathname();
     const routeSlug = pathname?.startsWith('/blog/')
         ? pathname.slice('/blog/'.length).split('/')[0]
         : undefined;
     const selectedSlug = activeSlug ?? routeSlug;
+    // On a post-detail route (`/blog/<slug>`) the page renders its own "‹ Posts"
+    // header, so the floating trigger hides there — no two stacked chevrons.
+    const isPostPage = !!pathname && /^\/blog\/[^/]+$/.test(pathname);
 
     const trimmed = query.trim();
     const filtered = useMemo(() => {
@@ -219,10 +213,12 @@ export const PostSidebar = ({
 
     return (
         <>
-            {/* Mobile-only open button. Hidden on desktop (persistent sidebar)
-                and while the drawer is open (the scrim + row tap close it), so it
-                never overlaps the "Posts" header. Floats top-left, legible over
-                page content via its own blur. */}
+            {/* Mobile-only open trigger — a BARE left-chevron icon (no outline,
+                background, or blur), the iMessage "back to the list" affordance.
+                Padding gives a comfortable hit area; only the visible box is
+                gone. Hidden on desktop (persistent rail), while the overlay is
+                open, and on post pages (which render their own "‹ Posts"
+                header). */}
             <button
                 type='button'
                 onClick={() => setOpen(true)}
@@ -230,11 +226,11 @@ export const PostSidebar = ({
                 aria-controls='post-sidebar'
                 aria-label='Show posts'
                 className={clsx(
-                    'fixed top-[max(0.75rem,env(safe-area-inset-top))] left-3 z-50 touch-manipulation rounded-full border border-border bg-background/70 p-2 text-foreground backdrop-blur transition-colors hover:border-muted-foreground/40 md:hidden',
-                    open && 'hidden'
+                    'fixed top-[max(0.5rem,env(safe-area-inset-top))] left-2 z-50 touch-manipulation p-1 text-foreground md:hidden',
+                    (open || isPostPage) && 'hidden'
                 )}
             >
-                <ListGlyph />
+                <ChevronLeftGlyph />
             </button>
 
             {/* On MOBILE the open sidebar is a FULL-VIEWPORT overlay — the
@@ -254,7 +250,7 @@ export const PostSidebar = ({
                 {/* Header — "Posts" + a decorative compose pencil. */}
                 <div className='flex min-h-[54px] shrink-0 items-center justify-between pr-3 pl-[18px] pt-[env(safe-area-inset-top)]'>
                     <h2 className='text-[30px] font-bold tracking-[-0.03em] text-[var(--sidebar-primary)] md:text-[22px] md:tracking-[-0.02em]'>
-                        Posts
+                        {POSTS_MENU_TITLE}
                     </h2>
                     {/* Close the full-screen overlay (mobile only). */}
                     <button
