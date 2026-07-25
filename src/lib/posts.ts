@@ -42,6 +42,11 @@ export type SidebarPost = {
     image: ImageField | null;
     /** First body paragraph, for the 2-line preview clamp. `null` when none. */
     excerpt: string | null;
+    /**
+     * Row link target. Defaults to `/blog/<slug>`; the pinned home row overrides
+     * it to `/` (see {@link homeSidebarPost}).
+     */
+    href?: string;
 };
 
 /**
@@ -152,3 +157,27 @@ export const PLACEHOLDER_SIDEBAR_POSTS: SidebarPost[] = [
             'Titles arrive as gray replies, the body answers in blue. The reading experience is the brand — a text thread, not a page.',
     },
 ];
+
+/**
+ * A stable, non-post slug for the pinned home row so it never collides with a
+ * real Prismic uid or a placeholder slug.
+ */
+export const HOME_SIDEBAR_SLUG = '__home__';
+
+/**
+ * The pinned FIRST sidebar row: the homepage rendered as an iMessage
+ * conversation with "Scott". Kept out of the Prismic-backed / placeholder post
+ * lists — {@link RootLayout} prepends it — so it never collides with real posts.
+ * `href` points at `/`, the avatar is an "S" monogram, and the preview mirrors
+ * the homepage copy (Scott's own words). `date` is passed in (today's date,
+ * stamped by the server layout) so this stays a pure function.
+ */
+export const homeSidebarPost = (dateIso: string): SidebarPost => ({
+    title: 'Scott',
+    slug: HOME_SIDEBAR_SLUG,
+    href: '/',
+    date: dateIso,
+    image: null,
+    // Mirrors the homepage copy (see `Messages/constants.ts`).
+    excerpt: "Hey! I'm a little busy at the moment.",
+});

@@ -70,23 +70,6 @@ const PencilGlyph = () => (
     </svg>
 );
 
-/** An X glyph for the mobile full-screen close button. */
-const CloseGlyph = () => (
-    <svg
-        aria-hidden='true'
-        viewBox='0 0 24 24'
-        width={22}
-        height={22}
-        fill='none'
-        stroke='currentColor'
-        strokeWidth={2}
-        strokeLinecap='round'
-    >
-        <line x1='6' y1='6' x2='18' y2='18' />
-        <line x1='18' y1='6' x2='6' y2='18' />
-    </svg>
-);
-
 /** 44px (50px on mobile) circular avatar: cover image, else title monogram. */
 const RowAvatar = ({ post }: { post: SidebarPost }) => (
     <PostAvatar
@@ -104,15 +87,17 @@ const RowAvatar = ({ post }: { post: SidebarPost }) => (
  */
 const PostRow = ({
     post,
+    href,
     selected,
     onNavigate,
 }: {
     post: SidebarPost;
+    href: string;
     selected: boolean;
     onNavigate?: () => void;
 }) => (
     <Link
-        href={`/blog/${post.slug}`}
+        href={href}
         onClick={onNavigate}
         aria-current={selected ? 'page' : undefined}
         className='group relative flex min-h-[70px] items-start gap-[11px] py-[9px] pr-[14px] pl-[26px] focus:outline-none'
@@ -183,11 +168,12 @@ export const PostSidebar = ({
     const [query, setQuery] = useState(defaultQuery);
 
     const pathname = usePathname();
-    const routeSlug = pathname?.startsWith('/blog/')
-        ? pathname.slice('/blog/'.length).split('/')[0]
-        : undefined;
-    const selectedSlug = activeSlug ?? routeSlug;
-    // On a post-detail route (`/blog/<slug>`) the page renders its own "‹ Posts"
+    // The highlighted row is the one whose href matches the route (the pinned
+    // home row on `/`, a post on `/blog/<slug>`). A Storybook `activeSlug`
+    // override maps to the corresponding blog path.
+    const activeHref = activeSlug ? `/blog/${activeSlug}` : pathname;
+    const hrefOf = (post: SidebarPost) => post.href ?? `/blog/${post.slug}`;
+    // On a post-detail route (`/blog/<slug>`) the page renders its own thread
     // header, so the floating trigger hides there — no two stacked chevrons.
     const isPostPage = !!pathname && /^\/blog\/[^/]+$/.test(pathname);
 
@@ -223,9 +209,9 @@ export const PostSidebar = ({
             {/* On MOBILE the open sidebar is a FULL-VIEWPORT overlay — the
                 iMessage Messages list screen (design 1b), not a side drawer: it
                 covers the whole screen (`w-full`, no scrim needed since nothing
-                shows behind it) and you tap a post to open it, or the header X to
-                close. On DESKTOP it's the persistent 334px rail (`md:w-[334px]`,
-                always visible via `md:translate-x-0`). */}
+                shows behind it). Dismiss by tapping a post or the subtle header
+                back-chevron. On DESKTOP it's the persistent 334px rail
+                (`md:w-[334px]`, always visible via `md:translate-x-0`). */}
             <aside
                 id='post-sidebar'
                 aria-label='Blog posts'
@@ -234,27 +220,35 @@ export const PostSidebar = ({
                     open ? 'translate-x-0' : '-translate-x-full'
                 )}
             >
-                {/* Header — "Posts" + a decorative compose pencil. */}
+                {/* Header — "Posts" title + the new-message (compose) icon that
+                    links to /contact. */}
                 <div className='flex min-h-[54px] shrink-0 items-center justify-between pr-3 pl-[18px] pt-[env(safe-area-inset-top)]'>
-                    <h2 className='text-[30px] font-bold tracking-[-0.03em] text-[var(--sidebar-primary)] md:text-[22px] md:tracking-[-0.02em]'>
-                        {POSTS_MENU_TITLE}
-                    </h2>
-                    {/* Close the full-screen overlay (mobile only). */}
-                    <button
-                        type='button'
-                        onClick={close}
-                        aria-label='Close posts'
-                        className='flex h-[30px] w-[30px] items-center justify-center text-[var(--sidebar-accent)] md:hidden'
-                    >
-                        <CloseGlyph />
-                    </button>
-                    {/* Decorative compose pencil (desktop rail only). */}
-                    <span
-                        aria-hidden='true'
-                        className='hidden h-[30px] w-[30px] items-center justify-center text-[var(--sidebar-accent)] md:flex'
+                    <div className='flex min-w-0 items-center gap-1'>
+                        {/* Subtle mobile-only close chevron so the full-screen
+                            overlay is never a dead-end (the prominent right icon
+                            is the compose action, not a close). */}
+                        <button
+                            type='button'
+                            onClick={close}
+                            aria-label='Close posts'
+                            className='-ml-1 shrink-0 p-1 text-[var(--sidebar-secondary)] md:hidden'
+                        >
+                            <ChevronLeftGlyph />
+                        </button>
+                        <h2 className='truncate text-[30px] font-bold tracking-[-0.03em] text-[var(--sidebar-primary)] md:text-[22px] md:tracking-[-0.02em]'>
+                            {POSTS_MENU_TITLE}
+                        </h2>
+                    </div>
+                    {/* New message → the compose/contact screen. Real control on
+                        both mobile and desktop (design shows it on the list
+                        header). */}
+                    <Link
+                        href='/contact'
+                        aria-label='New message'
+                        className='flex h-[30px] w-[30px] shrink-0 items-center justify-center text-[var(--sidebar-accent)]'
                     >
                         <PencilGlyph />
-                    </span>
+                    </Link>
                 </div>
 
                 {/* Live search — a real input styled as the design's search pill.
@@ -280,14 +274,18 @@ export const PostSidebar = ({
                     className='min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-4'
                 >
                     {filtered.length > 0 ? (
-                        filtered.map((post) => (
-                            <PostRow
-                                key={post.slug}
-                                post={post}
-                                selected={post.slug === selectedSlug}
-                                onNavigate={close}
-                            />
-                        ))
+                        filtered.map((post) => {
+                            const href = hrefOf(post);
+                            return (
+                                <PostRow
+                                    key={post.slug}
+                                    post={post}
+                                    href={href}
+                                    selected={href === activeHref}
+                                    onNavigate={close}
+                                />
+                            );
+                        })
                     ) : (
                         <p className='px-[26px] pt-6 text-center text-[13.5px] text-[var(--sidebar-secondary)]'>
                             No posts match “{trimmed}”.
