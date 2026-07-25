@@ -4,8 +4,8 @@ import { ComposeScreen } from './ComposeScreen';
 /**
  * The design's "New Message" compose screen (→ the `/contact` page): a 56px
  * blurred header ("New Message" + "Done"), then an iMessage "New Message to
- * Scott" form (recipient chip · name · email · message · blue send). Submit is a
- * placeholder `mailto:` — the real destination is the captain's call.
+ * Scott" mockup (recipient chip · name · email · message · blue send).
+ * Decorative for now — the Send is inert (no submit / destination yet).
  */
 const meta = {
     title: 'Blog/ComposeScreen',

@@ -25,14 +25,13 @@ const fieldClass =
 /**
  * The design's "New Message" compose screen, mapped onto a real contact page: a
  * 56px blurred `--panel-bg` header ("New Message" centered, a "Done" link back
- * to `/` on the right), then an iMessage "New Message to Scott" form — a To:
- * recipient chip, name + email, a message field, and the blue circular send
- * button.
+ * to `/` on the right), then an iMessage "New Message to Scott" mockup — a To:
+ * recipient chip, name + email, a message field, and the blue circular send.
  *
- * Submit target is a PLACEHOLDER: the form posts to a clearly-marked
- * `mailto:TODO@example.com` (opens the visitor's mail app, no backend, no JS).
- * The real destination — a mailto address vs a form backend — is the captain's
- * call; nothing personal is hardcoded.
+ * DECORATIVE for now, like the composer pill: the fields are real/typeable but
+ * Send is inert (no submit, no destination). It ships as a UI mockup — a real
+ * contact target (mailto vs backend) comes later. Not a `<form>`, so pressing
+ * Enter never navigates.
  */
 export const ComposeScreen = () => (
     <main className='min-h-screen'>
@@ -49,14 +48,9 @@ export const ComposeScreen = () => (
             </Link>
         </div>
 
-        {/* New-message-to-Scott form. `mailto:` submit needs no JS; the address
-            is an explicit placeholder pending the captain's decision. */}
-        <form
-            action='mailto:TODO@example.com'
-            method='post'
-            encType='text/plain'
-            className='mx-auto flex w-full max-w-xl flex-col gap-3 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+6rem)]'
-        >
+        {/* New-message-to-Scott mockup. A plain <div> (not a <form>) so it's
+            inert — decorative for now, like the composer pill. */}
+        <div className='mx-auto flex w-full max-w-xl flex-col gap-3 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+6rem)]'>
             {/* To: Scott recipient chip. */}
             <div className='flex items-center gap-2 border-b border-[var(--sidebar-separator)] pb-3'>
                 <span className='text-[15px] text-[var(--sidebar-secondary)]'>
@@ -111,9 +105,11 @@ export const ComposeScreen = () => (
                     placeholder='iMessage'
                     className='min-h-[44px] w-full flex-1 resize-none rounded-[18px] border border-[var(--sidebar-separator)] bg-[var(--sidebar-bg)] px-3.5 py-2.5 text-[16px] text-[var(--sidebar-primary)] placeholder:text-[var(--sidebar-secondary)] focus:outline-none'
                 />
+                {/* Inert — decorative send (no submit / destination yet). */}
                 <button
-                    type='submit'
+                    type='button'
                     aria-label='Send'
+                    aria-disabled='true'
                     className='mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--sidebar-accent)] text-white'
                 >
                     <SendArrowGlyph />
@@ -121,9 +117,8 @@ export const ComposeScreen = () => (
             </div>
 
             <p className='text-[12px] text-[var(--sidebar-secondary)]'>
-                Placeholder destination — Send opens your mail app to a TODO
-                address until a real contact address or form backend is wired.
+                Preview only — this compose screen is decorative for now.
             </p>
-        </form>
+        </div>
     </main>
 );

@@ -20,7 +20,9 @@
         ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
         'Liberation Mono', 'Courier New', monospace;
 
-    /* iMessage bubble palette — brand constant, identical in both themes */
+    /* iMessage bubble palette. Sent (brand navy) is constant in both themes;
+       received (grey) is the LIGHT default here and is themed dark in dark mode
+       (overridden below — the bubbles read these vars at runtime). */
     --color-imessage-sent: #075b97;
     --color-imessage-sent-foreground: #ffffff;
     --color-imessage-received: #e5e5ea;
@@ -68,6 +70,10 @@
         --muted-foreground: #98989f;
         --accent: #4aa3df;
         --border: #2c2c2e;
+
+        /* Dark received/grey bubbles: dark fill + white text. */
+        --color-imessage-received: #262628;
+        --color-imessage-received-foreground: #ffffff;
     }
 }
 
@@ -85,7 +91,7 @@
     --sidebar-row-sel: rgba(0, 0, 0, 0.06);
     --sidebar-primary: #000000;
     --sidebar-secondary: rgba(60, 60, 67, 0.6);
-    --sidebar-accent: #007aff;
+    --sidebar-accent: #075b97;
     /* Blurred thread header/footer bar (design's --panel-bg). */
     --panel-bg: rgba(255, 255, 255, 0.82);
 }
@@ -97,7 +103,7 @@
         --sidebar-row-sel: rgba(255, 255, 255, 0.09);
         --sidebar-primary: #ffffff;
         --sidebar-secondary: rgba(235, 235, 245, 0.6);
-        --sidebar-accent: #0a84ff;
+        --sidebar-accent: #075b97;
         --panel-bg: rgba(0, 0, 0, 0.7);
     }
 }
@@ -108,8 +114,10 @@
     --sidebar-row-sel: rgba(0, 0, 0, 0.06);
     --sidebar-primary: #000000;
     --sidebar-secondary: rgba(60, 60, 67, 0.6);
-    --sidebar-accent: #007aff;
+    --sidebar-accent: #075b97;
     --panel-bg: rgba(255, 255, 255, 0.82);
+    --color-imessage-received: #e5e5ea;
+    --color-imessage-received-foreground: #000000;
 }
 [data-theme='dark'] {
     --sidebar-bg: #000000;
@@ -118,8 +126,10 @@
     --sidebar-row-sel: rgba(255, 255, 255, 0.09);
     --sidebar-primary: #ffffff;
     --sidebar-secondary: rgba(235, 235, 245, 0.6);
-    --sidebar-accent: #0a84ff;
+    --sidebar-accent: #075b97;
     --panel-bg: rgba(0, 0, 0, 0.7);
+    --color-imessage-received: #262628;
+    --color-imessage-received-foreground: #ffffff;
 }
 
 @layer base {
