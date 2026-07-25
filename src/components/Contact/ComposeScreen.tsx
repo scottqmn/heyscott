@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PostAvatar } from '@/components/PostSidebar/parts';
+import { ComposerTextarea } from './ComposerTextarea';
 
 /** An up-arrow for the iMessage blue send button. */
 const SendArrowGlyph = () => (
@@ -98,12 +99,12 @@ export const ComposeScreen = () => (
                 <label className='sr-only' htmlFor='contact-message'>
                     Message
                 </label>
-                <textarea
+                {/* The floating composer input (auto-grows 1 → 4 rows). */}
+                <ComposerTextarea
                     id='contact-message'
                     name='message'
-                    rows={5}
                     placeholder='iMessage'
-                    className='min-h-[44px] w-full flex-1 resize-none rounded-[18px] border border-[var(--sidebar-separator)] bg-[var(--sidebar-bg)] px-3.5 py-2.5 text-[16px] text-[var(--sidebar-primary)] placeholder:text-[var(--sidebar-secondary)] focus:outline-none'
+                    className='flex-1'
                 />
                 {/* Inert — decorative send (no submit / destination yet). */}
                 <button
