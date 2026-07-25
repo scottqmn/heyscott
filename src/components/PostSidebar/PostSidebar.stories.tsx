@@ -1,7 +1,11 @@
 import type { ImageField } from '@prismicio/client';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
-import { PLACEHOLDER_SIDEBAR_POSTS, type SidebarPost } from '@/lib/posts';
+import {
+    homeSidebarPost,
+    PLACEHOLDER_SIDEBAR_POSTS,
+    type SidebarPost,
+} from '@/lib/posts';
 import { PostSidebar } from './PostSidebar';
 
 /** A minimal Prismic-image-like object for the avatar stories (seeded photo). */
@@ -15,10 +19,13 @@ const mockImage = (seed: string): ImageField =>
         copyright: null,
     }) as unknown as ImageField;
 
-/** Mock feed mixing cover-image avatars and monogram fallbacks. */
-const MOCK_POSTS: SidebarPost[] = PLACEHOLDER_SIDEBAR_POSTS.map((post, i) =>
-    i % 2 === 0 ? { ...post, image: mockImage(post.slug) } : post
-);
+/** Mock feed: the pinned "Scott" home row, then posts (image + monogram mix). */
+const MOCK_POSTS: SidebarPost[] = [
+    homeSidebarPost('2026-07-25T00:00:00Z'),
+    ...PLACEHOLDER_SIDEBAR_POSTS.map((post, i) =>
+        i % 2 === 0 ? { ...post, image: mockImage(post.slug) } : post
+    ),
+];
 
 /** Frames a story with page content behind the sidebar, and an optional theme. */
 const Frame = ({

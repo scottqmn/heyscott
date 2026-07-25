@@ -2,7 +2,11 @@ import { PrismicPreview } from '@prismicio/next';
 import type { Metadata } from 'next';
 import { PostListComposer } from '@/components/PostListComposer';
 import { PostSidebar, PostSidebarProvider } from '@/components/PostSidebar';
-import { blogPostToSidebar, PLACEHOLDER_SIDEBAR_POSTS } from '@/lib/posts';
+import {
+    blogPostToSidebar,
+    homeSidebarPost,
+    PLACEHOLDER_SIDEBAR_POSTS,
+} from '@/lib/posts';
 import { getAllPosts } from '@/lib/prismic/queries';
 import { repositoryName } from '@/prismicio';
 import './globals.css';
@@ -36,8 +40,16 @@ export default async function RootLayout({
     // posts and the sidebar still lists something everywhere.
     const posts = await getAllPosts();
     const sidebarPosts = posts.map(blogPostToSidebar);
-    const postsForSidebar =
+    const blogRows =
         sidebarPosts.length > 0 ? sidebarPosts : PLACEHOLDER_SIDEBAR_POSTS;
+    // Pin the homepage ("Scott" conversation) as the FIRST row, above the blog
+    // posts. Stamp today's date here (server) so it's a stable prop for the
+    // client sidebar (no hydration mismatch) — kept separate from the
+    // Prismic/placeholder rows so it never collides with a real post.
+    const postsForSidebar = [
+        homeSidebarPost(new Date().toISOString()),
+        ...blogRows,
+    ];
 
     return (
         <html lang='en'>
@@ -45,7 +57,11 @@ export default async function RootLayout({
                 {/* Shares the mobile Posts-overlay open-state so the blog-post
                     "‹ Posts" header (in `{children}`) can open the sidebar. */}
                 <PostSidebarProvider>
-                    {children}
+                    {/* Offset the main panel by the 334px rail on md+ so it
+                        fills the space BESIDE the fixed sidebar (responsive) —
+                        not centered in the full viewport where its left hides
+                        behind the rail. Full-width on mobile (rail is off-canvas). */}
+                    <div className='md:pl-[334px]'>{children}</div>
                     {/* Recirculation post index: a sidebar (persistent desktop /
                         full-screen overlay mobile) that floats over every route. */}
                     <PostSidebar posts={postsForSidebar} />

@@ -20,7 +20,11 @@ export const PostListComposer = ({
     placeholder = 'Read the blog…',
 }: PostListComposerProps) => {
     return (
-        <div className='fixed inset-x-0 bottom-0 z-50'>
+        // Offset by the 334px rail on md+ so the pill sits in the content area
+        // (beside the sidebar), aligned with the main panel — not centered in
+        // the full viewport where it'd hide behind the fixed rail. Full-width on
+        // mobile (no rail).
+        <div className='fixed inset-x-0 bottom-0 z-50 md:pl-[334px]'>
             {/* The compose bar has NO panel/frame — the full-width pill itself
                 floats over the page (its own blur + faint fill keep it legible),
                 reading as a hovering control, not a docked bar. Pad the bottom

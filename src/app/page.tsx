@@ -1,17 +1,13 @@
-import { Messages } from '@/components/Messages';
+import { HomeConversation } from '@/components/HomeConversation';
 
 /**
- * The whole live site is currently just the iMessage splash (matching
- * heyscott.com exactly): a "Hey Scott" sent bubble, then "Hey! I'm a little
- * busy at the moment." / "Talk soon?" received bubbles — no links, no nav. No
- * other routes are wired up yet; the blog + the iMessage component library
- * still live in the codebase (and in Storybook) but aren't linked into the
- * live site.
+ * The homepage — Scott's identity rendered as the "Scott" iMessage conversation
+ * (the SAME copy as the original splash), now framed by the global sidebar +
+ * composer chrome. It's the pinned FIRST row in the sidebar (see `layout.tsx` /
+ * `homeSidebarPost`) and the selected row on `/`. The original JS-free
+ * `Messages` splash component is kept in the codebase (+ Storybook); the copy
+ * lives in `Messages/constants.ts`, which `HomeConversation` reuses.
  */
 export default function Home() {
-    return (
-        <main>
-            <Messages />
-        </main>
-    );
+    return <HomeConversation />;
 }
