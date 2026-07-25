@@ -26,8 +26,8 @@ export const ChevronLeftGlyph = () => (
     </svg>
 );
 
-/** The Posts menu title, used by the sidebar header. */
-export const POSTS_MENU_TITLE = 'Posts';
+/** The sidebar header title — the site name (lowercase). */
+export const POSTS_MENU_TITLE = 'heyscott';
 
 /**
  * A post's circular avatar: the cover `image` when present (via

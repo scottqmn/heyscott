@@ -173,9 +173,11 @@ export const PostSidebar = ({
     // override maps to the corresponding blog path.
     const activeHref = activeSlug ? `/blog/${activeSlug}` : pathname;
     const hrefOf = (post: SidebarPost) => post.href ?? `/blog/${post.slug}`;
-    // On a post-detail route (`/blog/<slug>`) the page renders its own thread
-    // header, so the floating trigger hides there — no two stacked chevrons.
-    const isPostPage = !!pathname && /^\/blog\/[^/]+$/.test(pathname);
+    // Pages that render their own always-visible ThreadHeader (the homepage and
+    // post-detail routes) already carry a back-chevron, so the floating trigger
+    // hides there — no two stacked chevrons. The blog index + /contact keep it.
+    const hasOwnHeader =
+        pathname === '/' || (!!pathname && /^\/blog\/[^/]+$/.test(pathname));
 
     const trimmed = query.trim();
     const filtered = useMemo(() => {
@@ -190,8 +192,8 @@ export const PostSidebar = ({
                 background, or blur), the iMessage "back to the list" affordance.
                 Padding gives a comfortable hit area; only the visible box is
                 gone. Hidden on desktop (persistent rail), while the overlay is
-                open, and on post pages (which render their own "‹ Posts"
-                header). */}
+                open, and on pages with their own ThreadHeader (homepage + posts,
+                whose header carries the back-chevron). */}
             <button
                 type='button'
                 onClick={() => setOpen(true)}
@@ -200,7 +202,7 @@ export const PostSidebar = ({
                 aria-label='Show posts'
                 className={clsx(
                     'fixed top-[max(0.5rem,env(safe-area-inset-top))] left-2 z-50 touch-manipulation p-1 text-foreground md:hidden',
-                    (open || isPostPage) && 'hidden'
+                    (open || hasOwnHeader) && 'hidden'
                 )}
             >
                 <ChevronLeftGlyph />

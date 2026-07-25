@@ -52,8 +52,8 @@ const Frame = ({
 
 /**
  * The Messages-style post sidebar (design direction 1a): a 334px column with a
- * "Posts" header, a live title-search pill, and rich rows — avatar (cover image
- * or monogram) · title · date · 2-line preview · selected-row highlight.
+ * "heyscott" header, a live title-search pill, and rich rows — avatar (cover
+ * image or monogram) · title · date · 2-line preview · selected-row highlight.
  */
 const meta = {
     title: 'Blog/PostSidebar',

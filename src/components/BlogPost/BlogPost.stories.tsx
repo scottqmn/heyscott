@@ -4,11 +4,12 @@ import { mockImage } from '@/components/imessage/mocks';
 import { BlogPost } from './BlogPost';
 
 /**
- * A whole blog post rendered as an iMessage conversation: the post's `title`
- * and `image` are SENT (outgoing/blue), then the body ARRIVES as a run of
- * incoming replies. Each `rich_text` slice is split into ONE bubble per block —
- * paragraphs become text bubbles (inline bold/italic/links preserved), images
- * and embeds become media bubbles. Driven by mock content (no live repo).
+ * A whole blog post rendered as an iMessage conversation: the post's identity
+ * (title + avatar) sits in the always-visible thread header (the page h1 — no
+ * title bubble), the `image` is SENT (outgoing/blue), then the body ARRIVES as a
+ * run of incoming replies. Each `rich_text` slice is split into ONE bubble per
+ * block — paragraphs become text bubbles (inline bold/italic/links preserved),
+ * images and embeds become media bubbles. Driven by mock content (no live repo).
  */
 const meta = {
     title: 'Blog/BlogPost',
@@ -170,10 +171,9 @@ export const Default: Story = {
 };
 
 /**
- * Mobile — shows the iMessage thread-screen header at the top: the POST's own
- * avatar + title (centered) with an italic Georgia "i" info button, plus a back
- * chevron (left) that opens the Posts list. Mobile-only; hidden on desktop where
- * the Posts rail is always visible.
+ * Mobile — the thread header (avatar + title + italic Georgia "i") is always
+ * visible; on mobile it also shows a back chevron (left) that opens the Posts
+ * list. The title is the page h1; there's no title bubble in the body.
  */
 export const Mobile: Story = {
     args: { post: mockPost },

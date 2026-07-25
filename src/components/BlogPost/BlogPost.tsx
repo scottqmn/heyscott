@@ -2,13 +2,8 @@ import { asText, isFilled, type Content } from '@prismicio/client';
 import { PrismicNextImage } from '@prismicio/next';
 import { PrismicRichText } from '@prismicio/react';
 import { cloneElement, type ReactElement } from 'react';
-import {
-    HeadingMessage,
-    MediaMessage,
-    MessageThread,
-    TextMessage,
-} from '@/components/imessage';
-import { BlogPostHeader } from './BlogPostHeader';
+import { MediaMessage, MessageThread, TextMessage } from '@/components/imessage';
+import { ThreadHeader } from '@/components/ThreadHeader';
 import { richTextToBubbles } from './richTextToBubbles';
 
 type BlogPostProps = {
@@ -31,30 +26,30 @@ const startSliceGroup = (bubbles: ReactElement[]): ReactElement[] =>
         : bubbles;
 
 /**
- * A blog post rendered as an iMessage conversation. The post's own framing —
- * `title` and `image` — is SENT (outgoing, blue, right), and the body ARRIVES
- * as a run of incoming replies (grey, left): each `rich_text` slice is split
- * into one bubble per top-level block (paragraphs/list items → text bubbles,
- * images/embeds → media bubbles, via {@link richTextToBubbles}); other slice
- * types (e.g. `heading`) stay a single incoming bubble. {@link MessageThread}
- * receives every bubble as a direct child, so it derives the tail/grouping and
- * the outgoing header groups above the incoming body run.
+ * A blog post rendered as an iMessage conversation. The post's identity (its
+ * `title` + avatar) lives in the always-visible {@link ThreadHeader} — the
+ * title is the page `<h1>`, so there's no title bubble. The `image` is SENT
+ * (outgoing, blue, right), then the body ARRIVES as a run of incoming replies
+ * (grey, left): each `rich_text` slice is split into one bubble per top-level
+ * block (paragraphs/list items → text bubbles, images/embeds → media bubbles,
+ * via {@link richTextToBubbles}); other slice types (e.g. `heading`) stay a
+ * single incoming bubble. {@link MessageThread} receives every bubble as a
+ * direct child, so it derives the tail/grouping.
  */
 export const BlogPost = ({ post }: BlogPostProps) => {
     const { title, image, body } = post.data;
 
     return (
         <main className='min-h-screen'>
-            {/* iMessage thread-screen header identifying this post (mobile only). */}
-            <BlogPostHeader post={post} />
+            {/* Thread header carries the post identity (avatar + title as the
+                page h1), so the body no longer needs a title bubble. */}
+            <ThreadHeader
+                title={asText(title)}
+                image={isFilled.image(image) ? image : null}
+                seed={post.uid}
+            />
             <div className='py-16'>
                 <MessageThread>
-                    {isFilled.richText(title) && (
-                        <HeadingMessage>
-                            {/* The post title is the page's h1 (a11y). */}
-                            <h1>{asText(title)}</h1>
-                        </HeadingMessage>
-                    )}
                     {isFilled.image(image) && (
                         <MediaMessage direction='outgoing'>
                             <PrismicNextImage field={image} />
