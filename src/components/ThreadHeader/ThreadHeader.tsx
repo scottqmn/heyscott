@@ -2,19 +2,19 @@
 
 import type { ImageField } from '@prismicio/client';
 import { usePostSidebar } from '@/components/PostSidebar/PostSidebarContext';
-import { ChevronLeftGlyph, PostAvatar } from '@/components/PostSidebar/parts';
+import {
+    ChevronLeftGlyph,
+    ChevronRightGlyph,
+    PostAvatar,
+} from '@/components/PostSidebar/parts';
 
 /**
- * The iMessage thread-screen header (design direction 1a main pane): a 56px
- * blurred `--panel-bg` bar that IDENTIFIES the conversation — its avatar +
- * title (the "group name") + an italic Georgia "i" info button. The title is
- * the page's single `<h1>` (a11y), so the conversation body no longer needs a
- * title bubble.
- *
- * ALWAYS visible (desktop main pane + mobile) — this is what carries the
- * identity now. Only the back-chevron is mobile-only: it opens the mobile Posts
- * overlay via the shared context; on desktop the persistent 334px rail is the
- * list, so no back affordance is needed there.
+ * The iMessage thread-screen header (design 1a/1b main pane): a 56px blurred
+ * `--panel-bg` bar with a **vertical stack** — avatar on top, the conversation
+ * name BELOW it (the page `<h1>`, small/regular like the design's label), and
+ * the info "i" in a bordered circle pinned right. On mobile a `›` disclosure
+ * follows the title, and the back-chevron (left) opens the Posts overlay. The
+ * title is the "group name" so the body needs no title bubble.
  *
  * Shared by the blog post pages and the homepage "Scott" conversation.
  */
@@ -27,13 +27,13 @@ export const ThreadHeader = ({
     title: string;
     /** Avatar cover image, or `null` → monogram from the title. */
     image: ImageField | null;
-    /** Stable seed for the monogram color (post uid / a slug). */
+    /** Stable seed (post uid / a slug) — retained for the avatar API. */
     seed: string;
 }) => {
     const sidebar = usePostSidebar();
 
     return (
-        <div className='sticky top-0 z-30 flex min-h-[56px] items-center gap-2 border-b border-[var(--sidebar-separator)] bg-[var(--panel-bg)] px-2 pt-[env(safe-area-inset-top)] backdrop-blur-[20px] [-webkit-backdrop-filter:blur(20px)]'>
+        <div className='sticky top-0 z-30 flex min-h-[56px] flex-col items-center justify-center gap-[3px] border-b border-[var(--sidebar-separator)] bg-[var(--panel-bg)] px-12 pt-[env(safe-area-inset-top)] pb-1.5 backdrop-blur-[20px] [-webkit-backdrop-filter:blur(20px)]'>
             {/* Back to the Posts list (mobile only — desktop has the rail). */}
             <button
                 type='button'
@@ -41,28 +41,29 @@ export const ThreadHeader = ({
                 aria-label='Show posts'
                 aria-controls='post-sidebar'
                 aria-expanded={sidebar?.open ?? false}
-                className='shrink-0 p-1 text-[var(--sidebar-accent)] md:hidden'
+                className='absolute top-1/2 left-1 -translate-y-1/2 p-1 text-[var(--sidebar-accent)] md:hidden'
             >
                 <ChevronLeftGlyph />
             </button>
 
-            {/* Conversation identity: avatar + title (the page h1), centered. */}
-            <div className='flex min-w-0 flex-1 items-center justify-center gap-2'>
-                <PostAvatar
-                    image={image}
-                    title={title}
-                    seed={seed}
-                    className='h-8 w-8 text-[13px]'
-                />
-                <h1 className='truncate text-[16px] font-semibold tracking-[-0.01em] text-[var(--sidebar-primary)]'>
+            {/* Identity stack: avatar over the name. */}
+            <PostAvatar
+                image={image}
+                title={title}
+                seed={seed}
+                className='h-11 w-11 text-[15px] md:h-[34px] md:w-[34px] md:text-[13px]'
+            />
+            <div className='flex max-w-full items-center gap-0.5'>
+                <h1 className='truncate text-[13px] font-normal text-[var(--sidebar-primary)]'>
                     {title}
                 </h1>
+                <ChevronRightGlyph className='shrink-0 text-[var(--sidebar-tertiary)] md:hidden' />
             </div>
 
-            {/* Decorative italic Georgia "i" info button (design). */}
+            {/* Info "i" — a bordered 28px circle pinned right (decorative). */}
             <span
                 aria-hidden='true'
-                className='flex h-7 w-7 shrink-0 items-center justify-center text-[17px] italic text-[var(--sidebar-accent)]'
+                className='absolute top-1/2 right-[18px] flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border-[1.5px] border-[var(--sidebar-separator)] text-[15px] font-semibold italic text-[var(--sidebar-accent)]'
                 style={{ fontFamily: 'Georgia, serif' }}
             >
                 i

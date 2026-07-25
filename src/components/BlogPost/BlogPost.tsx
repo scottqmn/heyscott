@@ -5,10 +5,31 @@ import { cloneElement, type ReactElement } from 'react';
 import { MediaMessage, MessageThread, TextMessage } from '@/components/imessage';
 import { ThreadHeader } from '@/components/ThreadHeader';
 import { richTextToBubbles } from './richTextToBubbles';
+import { ThreadDateDivider } from './ThreadDateDivider';
 
 type BlogPostProps = {
     post: Content.BlogPostDocument;
 };
+
+/** Compact "Jul 14" date (UTC → stable SSR). */
+const DATE_FMT = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+});
+
+/** Total body word count across every slice (rich_text content / heading). */
+const bodyWordCount = (
+    body: Content.BlogPostDocument['data']['body']
+): number =>
+    body.reduce((total, slice) => {
+        const text =
+            slice.slice_type === 'rich_text'
+                ? asText(slice.primary.content)
+                : asText(slice.primary.heading);
+        const trimmed = text.trim();
+        return total + (trimmed ? trimmed.split(/\s+/).length : 0);
+    }, 0);
 
 /**
  * Force a slice's FIRST bubble to start a new message group, so two adjacent
@@ -38,6 +59,8 @@ const startSliceGroup = (bubbles: ReactElement[]): ReactElement[] =>
  */
 export const BlogPost = ({ post }: BlogPostProps) => {
     const { title, image, body } = post.data;
+    const date = DATE_FMT.format(new Date(post.first_publication_date));
+    const readTime = `${Math.max(1, Math.ceil(bodyWordCount(body) / 200))} min read`;
 
     return (
         <main className='min-h-screen'>
@@ -49,6 +72,8 @@ export const BlogPost = ({ post }: BlogPostProps) => {
                 seed={post.uid}
             />
             <div className='py-16'>
+                {/* Date · read-time divider, above the first bubble (D10). */}
+                <ThreadDateDivider date={date} readTime={readTime} />
                 <MessageThread>
                     {isFilled.image(image) && (
                         <MediaMessage direction='outgoing'>
