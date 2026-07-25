@@ -26,24 +26,6 @@ export const ChevronLeftGlyph = () => (
     </svg>
 );
 
-/** A small right-pointing chevron “›” — the mobile thread-title disclosure. */
-export const ChevronRightGlyph = ({ className }: { className?: string }) => (
-    <svg
-        aria-hidden='true'
-        viewBox='0 0 24 24'
-        width={14}
-        height={14}
-        fill='none'
-        stroke='currentColor'
-        strokeWidth={2.25}
-        strokeLinecap='round'
-        strokeLinejoin='round'
-        className={className}
-    >
-        <path d='M9 5l7 7-7 7' />
-    </svg>
-);
-
 /** The sidebar header title — the site name (lowercase). */
 export const POSTS_MENU_TITLE = 'heyscott';
 

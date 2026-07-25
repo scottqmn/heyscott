@@ -220,9 +220,10 @@ export const PostSidebar = ({
             {/* On MOBILE the open sidebar is a FULL-VIEWPORT overlay — the
                 iMessage Messages list screen (design 1b), not a side drawer: it
                 covers the whole screen (`w-full`, no scrim needed since nothing
-                shows behind it). Dismiss by tapping a post or the subtle header
-                back-chevron. On DESKTOP it's the persistent 334px rail
-                (`md:w-[334px]`, always visible via `md:translate-x-0`). */}
+                shows behind it). Dismissed by NAVIGATION — tapping a post or the
+                compose control (→ /contact) closes it; there's no close chevron.
+                On DESKTOP it's the persistent 334px rail (`md:w-[334px]`, always
+                visible via `md:translate-x-0`). */}
             <aside
                 id='post-sidebar'
                 aria-label='Blog posts'
@@ -236,23 +237,13 @@ export const PostSidebar = ({
                     own line below. */}
                 <div className='shrink-0 pt-[max(0.5rem,env(safe-area-inset-top))] pr-3 pb-0.5 pl-[18px]'>
                     <div className='flex h-[26px] items-center justify-between'>
-                        <div className='flex items-center gap-1'>
-                            {/* Subtle mobile-only close chevron so the full-screen
-                                overlay is never a dead-end. */}
-                            <button
-                                type='button'
-                                onClick={close}
-                                aria-label='Close posts'
-                                className='-ml-1 shrink-0 p-1 text-[var(--sidebar-secondary)] md:hidden'
-                            >
-                                <ChevronLeftGlyph />
-                            </button>
-                            {/* Edit → the settings popover (theme toggle). */}
-                            <EditMenu />
-                        </div>
-                        {/* New-message compose pencil → /contact. */}
+                        {/* Edit → the settings popover (theme toggle). */}
+                        <EditMenu />
+                        {/* New-message compose pencil → /contact. Also closes the
+                            mobile overlay (dismiss-by-navigation — no chevron). */}
                         <Link
                             href='/contact'
+                            onClick={close}
                             aria-label='New message'
                             className='flex h-[30px] w-[30px] shrink-0 items-center justify-center text-[var(--sidebar-accent)]'
                         >
