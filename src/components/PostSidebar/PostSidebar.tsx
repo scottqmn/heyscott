@@ -1,18 +1,12 @@
 'use client';
 
-import { PrismicNextImage } from '@prismicio/next';
 import { clsx } from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import {
-    monogramColor,
-    monogramInitial,
-    PLACEHOLDER_SIDEBAR_POSTS,
-    type SidebarPost,
-} from '@/lib/posts';
+import { PLACEHOLDER_SIDEBAR_POSTS, type SidebarPost } from '@/lib/posts';
 import { usePostSidebar } from './PostSidebarContext';
-import { ChevronLeftGlyph, POSTS_MENU_TITLE } from './parts';
+import { ChevronLeftGlyph, POSTS_MENU_TITLE, PostAvatar } from './parts';
 
 type PostSidebarProps = {
     /** Rich posts to list. Defaults to the placeholder source (Prismic pending). */
@@ -94,21 +88,14 @@ const CloseGlyph = () => (
 );
 
 /** 44px (50px on mobile) circular avatar: cover image, else title monogram. */
-const RowAvatar = ({ post }: { post: SidebarPost }) =>
-    post.image ? (
-        <PrismicNextImage
-            field={post.image}
-            className='h-[50px] w-[50px] shrink-0 rounded-full object-cover md:h-11 md:w-11'
-        />
-    ) : (
-        <span
-            aria-hidden='true'
-            className='flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full text-[17px] font-semibold tracking-[0.02em] text-white md:h-11 md:w-11 md:text-[15px]'
-            style={{ backgroundColor: monogramColor(post.slug) }}
-        >
-            {monogramInitial(post.title)}
-        </span>
-    );
+const RowAvatar = ({ post }: { post: SidebarPost }) => (
+    <PostAvatar
+        image={post.image}
+        title={post.title}
+        seed={post.slug}
+        className='h-[50px] w-[50px] text-[17px] md:h-11 md:w-11 md:text-[15px]'
+    />
+);
 
 /**
  * One conversation-list row: avatar · title + date · 2-line preview, with a

@@ -45,8 +45,8 @@ export const BlogPost = ({ post }: BlogPostProps) => {
 
     return (
         <main className='min-h-screen'>
-            {/* iMessage thread-screen "‹ Posts" back header (mobile only). */}
-            <BlogPostHeader />
+            {/* iMessage thread-screen header identifying this post (mobile only). */}
+            <BlogPostHeader post={post} />
             <div className='py-16'>
                 <MessageThread>
                     {isFilled.richText(title) && (

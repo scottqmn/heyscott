@@ -170,9 +170,10 @@ export const Default: Story = {
 };
 
 /**
- * Mobile — shows the iMessage thread-screen "‹ Posts" back header at the top
- * (reused from the sidebar menu's title + chevron). Mobile-only; hidden on
- * desktop where the Posts rail is always visible.
+ * Mobile — shows the iMessage thread-screen header at the top: the POST's own
+ * avatar + title (centered) with an italic Georgia "i" info button, plus a back
+ * chevron (left) that opens the Posts list. Mobile-only; hidden on desktop where
+ * the Posts rail is always visible.
  */
 export const Mobile: Story = {
     args: { post: mockPost },
