@@ -254,3 +254,25 @@
     --tw-prose-captions: var(--muted-foreground);
     font-weight: 300;
 }
+
+/*
+ * Slight, fast page-transition fade. `app/template.tsx` re-mounts its wrapper on
+ * every navigation, replaying this animation for a gentle opacity fade-in of the
+ * page content. No layout shift; disabled under reduced-motion.
+ */
+@keyframes pageFade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+.page-fade {
+    animation: pageFade 180ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+    .page-fade {
+        animation: none;
+    }
+}
