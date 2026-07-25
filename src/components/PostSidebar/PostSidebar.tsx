@@ -113,6 +113,11 @@ const PostRow = ({
                     : 'group-hover:bg-[var(--sidebar-row-sel)] group-focus-visible:bg-[var(--sidebar-row-sel)]'
             )}
         />
+        {/* Mobile-only list hairline (design 1b): from x=52 to the right edge. */}
+        <span
+            aria-hidden='true'
+            className='pointer-events-none absolute bottom-0 left-[52px] right-0 h-px bg-[var(--sidebar-separator)] md:hidden'
+        />
         <span className='relative'>
             <RowAvatar post={post} />
         </span>
@@ -174,11 +179,14 @@ export const PostSidebar = ({
     // override maps to the corresponding blog path.
     const activeHref = activeSlug ? `/blog/${activeSlug}` : pathname;
     const hrefOf = (post: SidebarPost) => post.href ?? `/blog/${post.slug}`;
-    // Pages that render their own always-visible ThreadHeader (the homepage and
-    // post-detail routes) already carry a back-chevron, so the floating trigger
-    // hides there — no two stacked chevrons. The blog index + /contact keep it.
+    // Pages that render their own header (the homepage/blog conversation, a
+    // post, and /contact's compose header) already carry a back affordance, so
+    // the floating trigger hides there — no two stacked chevrons.
     const hasOwnHeader =
-        pathname === '/' || (!!pathname && /^\/blog\/[^/]+$/.test(pathname));
+        pathname === '/' ||
+        pathname === '/blog' ||
+        pathname === '/contact' ||
+        (!!pathname && /^\/blog\/[^/]+$/.test(pathname));
 
     const trimmed = query.trim();
     const filtered = useMemo(() => {
@@ -223,30 +231,26 @@ export const PostSidebar = ({
                     open ? 'translate-x-0' : '-translate-x-full'
                 )}
             >
-                {/* Header — "Posts" title + the new-message (compose) icon that
-                    links to /contact. */}
-                <div className='flex min-h-[54px] shrink-0 items-center justify-between pr-3 pl-[18px] pt-[env(safe-area-inset-top)]'>
-                    <div className='flex min-w-0 items-center gap-1'>
-                        {/* Subtle mobile-only close chevron so the full-screen
-                            overlay is never a dead-end (the prominent right icon
-                            is the compose action, not a close). */}
-                        <button
-                            type='button'
-                            onClick={close}
-                            aria-label='Close posts'
-                            className='-ml-1 shrink-0 p-1 text-[var(--sidebar-secondary)] md:hidden'
-                        >
-                            <ChevronLeftGlyph />
-                        </button>
-                        <h2 className='truncate text-[30px] font-bold tracking-[-0.03em] text-[var(--sidebar-primary)] md:text-[22px] md:tracking-[-0.02em]'>
-                            {POSTS_MENU_TITLE}
-                        </h2>
-                    </div>
-                    {/* Header controls: the Edit/more menu (settings — theme
-                        toggle for now) + new-message compose pencil → /contact.
-                        Both on mobile and desktop, styled alike (~30px, accent). */}
-                    <div className='flex shrink-0 items-center gap-1'>
-                        <EditMenu />
+                {/* Two-row header (design 1a/1b): a control row — "Edit" (left)
+                    + compose pencil (right) — then the "heyscott" title on its
+                    own line below. */}
+                <div className='shrink-0 pt-[max(0.5rem,env(safe-area-inset-top))] pr-3 pb-0.5 pl-[18px]'>
+                    <div className='flex h-[26px] items-center justify-between'>
+                        <div className='flex items-center gap-1'>
+                            {/* Subtle mobile-only close chevron so the full-screen
+                                overlay is never a dead-end. */}
+                            <button
+                                type='button'
+                                onClick={close}
+                                aria-label='Close posts'
+                                className='-ml-1 shrink-0 p-1 text-[var(--sidebar-secondary)] md:hidden'
+                            >
+                                <ChevronLeftGlyph />
+                            </button>
+                            {/* Edit → the settings popover (theme toggle). */}
+                            <EditMenu />
+                        </div>
+                        {/* New-message compose pencil → /contact. */}
                         <Link
                             href='/contact'
                             aria-label='New message'
@@ -255,6 +259,9 @@ export const PostSidebar = ({
                             <PencilGlyph />
                         </Link>
                     </div>
+                    <h2 className='mt-px truncate text-[30px] font-bold tracking-[-0.03em] text-[var(--sidebar-primary)] md:text-[22px] md:tracking-[-0.02em]'>
+                        {POSTS_MENU_TITLE}
+                    </h2>
                 </div>
 
                 {/* Live search — a real input styled as the design's search pill.

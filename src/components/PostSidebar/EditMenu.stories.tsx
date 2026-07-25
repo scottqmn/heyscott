@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { EditMenu } from './EditMenu';
 
 /**
- * The sidebar header's Edit / "more" control (iOS Messages affordance) as a
- * shadcn Popover. Its one setting for now is the System / Light / Dark theme
- * toggle, which themes the whole app.
+ * The sidebar header's literal "Edit" text control (design 1a/1b) as a shadcn
+ * Popover, anchored down-left. Its one setting for now is the System / Light /
+ * Dark theme toggle, which themes the whole app.
  */
 const meta = {
     title: 'Blog/EditMenu',
